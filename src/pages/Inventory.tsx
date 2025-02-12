@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Plus, Search, ArrowDown, ArrowUp, X, AlertTriangle, Pencil, Trash2, History } from 'lucide-react';
+import { Package, Plus, Search, ArrowDown, ArrowUp, X, AlertTriangle, Pencil, Trash2 } from 'lucide-react';
 import { getInventoryItems, createInventoryItem, updateInventoryItem, deleteInventoryItem, addInventoryMovement, type InventoryItem } from '@/lib/inventory';
 
 export default function Inventory() {
