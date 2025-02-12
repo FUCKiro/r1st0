@@ -139,7 +139,7 @@ export default function TableMap({ tables, onTableClick, onTableMove }: Props) {
 
   return (
     <div 
-      className="relative w-full h-[calc(100vh-12rem)] bg-gray-50 rounded-lg border-2 border-gray-200 overflow-hidden"
+      className="relative w-full h-[calc(100vh-12rem)] bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 overflow-hidden shadow-inner"
       onMouseLeave={handleMouseLeave}
     >
       {tables.map((table) => {
@@ -166,28 +166,29 @@ export default function TableMap({ tables, onTableClick, onTableMove }: Props) {
               transition: isDragging ? 'none' : 'transform 0.2s ease-out',
               cursor: isDragging ? 'grabbing' : 'grab',
               zIndex: isDragging ? 9999 : 1,
-              touchAction: 'none'
+              touchAction: 'none',
+              willChange: 'transform'
             }}
             className={`p-4 rounded-lg shadow-md w-48 ${
-              table.status === 'occupied' ? 'bg-red-50 border-2 border-red-500' :
-              table.status === 'reserved' ? 'bg-yellow-50 border-2 border-yellow-500' :
-              'bg-green-50 border-2 border-green-500'
+              table.status === 'occupied' ? 'bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-500 shadow-red-100' :
+              table.status === 'reserved' ? 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-500 shadow-yellow-100' :
+              'bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-500 shadow-green-100'
             }`}
           >
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold">Tavolo {table.number}</h3>
+              <h3 className="font-semibold text-gray-800">Tavolo {table.number}</h3>
               <span
                 className={`px-2 py-1 rounded-full text-xs ${
-                  table.status === 'occupied' ? 'bg-red-100 text-red-800' :
-                  table.status === 'reserved' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-green-100 text-green-800'
+                  table.status === 'occupied' ? 'bg-red-100/80 text-red-800 backdrop-blur-sm' :
+                  table.status === 'reserved' ? 'bg-yellow-100/80 text-yellow-800 backdrop-blur-sm' :
+                  'bg-green-100/80 text-green-800 backdrop-blur-sm'
                 }`}
               >
                 {table.status === 'occupied' ? 'Occupato' :
                  table.status === 'reserved' ? 'Prenotato' : 'Libero'}
               </span>
             </div>
-            <div className="flex items-center text-gray-600 text-sm">
+            <div className="flex items-center text-gray-600 text-sm bg-white/50 rounded-md px-2 py-1">
               <Users className="w-4 h-4 mr-1" />
               <span>{table.capacity}</span>
             </div>

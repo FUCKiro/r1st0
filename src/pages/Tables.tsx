@@ -183,12 +183,14 @@ export default function Tables() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Gestione Tavoli</h1>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+          Gestione Tavoli
+        </h1>
         <div className="flex gap-2">
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+            className="rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 bg-white/50 backdrop-blur-sm transition-colors"
           >
             <option value="all">Tutti</option>
             <option value="free">Liberi</option>
@@ -197,7 +199,7 @@ export default function Tables() {
           </select>
           <button
             onClick={() => setViewMode(prev => prev === 'list' ? 'map' : 'list')}
-            className="px-4 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-white shadow-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
           >
             {viewMode === 'list' ? (
               <>
@@ -218,8 +220,8 @@ export default function Tables() {
             }}
             className={`px-4 py-2 rounded-md text-sm font-medium ${
               isMergeMode
-                ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
             <Link2 className="w-4 h-4 inline-block mr-2" />
@@ -229,7 +231,7 @@ export default function Tables() {
       </div>
 
       {isMergeMode && selectedTablesToMerge.length > 0 && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+        <div className="mb-4 p-4 bg-gradient-to-r from-red-50 to-red-100/50 border border-red-200 rounded-lg shadow-sm backdrop-blur-sm">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-red-700 font-medium">
@@ -244,7 +246,7 @@ export default function Tables() {
             <button
               onClick={handleMergeTables}
               disabled={selectedTablesToMerge.length < 2}
-              className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50"
+              className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 disabled:opacity-50 transition-colors shadow-sm"
             >
               Unisci
             </button>
@@ -272,12 +274,12 @@ export default function Tables() {
             key={table.id}
             className={`p-4 rounded-lg shadow-sm border-2 relative ${
               isMergeMode && selectedTablesToMerge.includes(table.id)
-                ? 'border-blue-500 bg-blue-50'
+                ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100/50'
                 : 
-              table.status === 'occupied' ? 'border-red-500 bg-red-50' :
-              table.status === 'reserved' ? 'border-yellow-500 bg-yellow-50' :
-              'border-green-500 bg-green-50'
-            } ${isMergeMode ? 'cursor-pointer' : ''}`}
+              table.status === 'occupied' ? 'border-red-500 bg-gradient-to-br from-red-50 to-red-100/50' :
+              table.status === 'reserved' ? 'border-yellow-500 bg-gradient-to-br from-yellow-50 to-yellow-100/50' :
+              'border-green-500 bg-gradient-to-br from-green-50 to-green-100/50'
+            } ${isMergeMode ? 'cursor-pointer hover:scale-[1.02] transition-transform' : ''}`}
             onClick={() => isMergeMode && toggleTableSelection(table.id)}
           >
             <div className="flex justify-between items-center mb-2">
@@ -285,9 +287,9 @@ export default function Tables() {
               <div className="flex items-center gap-2">
                 <span
                   className={`px-2 py-1 rounded-full text-sm ${
-                    table.status === 'occupied' ? 'bg-red-100 text-red-800' :
-                    table.status === 'reserved' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-green-100 text-green-800'
+                    table.status === 'occupied' ? 'bg-red-100/80 text-red-800 backdrop-blur-sm' :
+                    table.status === 'reserved' ? 'bg-yellow-100/80 text-yellow-800 backdrop-blur-sm' :
+                    'bg-green-100/80 text-green-800 backdrop-blur-sm'
                   }`}
                 >
                   {table.status === 'occupied' ? 'Occupato' :
@@ -296,14 +298,14 @@ export default function Tables() {
                 <div className="relative">
                   <button
                     onClick={() => setShowActionsFor(showActionsFor === table.id ? null : table.id)}
-                    className="p-1 hover:bg-gray-100 rounded-full"
+                    className="p-1 hover:bg-gray-100/50 rounded-full transition-colors"
                   >
                     <MoreVertical className="w-5 h-5 text-gray-500" />
                   </button>
                   
                   {showActionsFor === table.id && (
                     <div className="absolute right-0 mt-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                      <div className="py-1">
+                      <div className="py-1 divide-y divide-gray-100">
                         <button
                           onClick={() => {
                             setSelectedTable(table);
@@ -313,7 +315,7 @@ export default function Tables() {
                             });
                             setShowActionsFor(null);
                           }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                         >
                           <Pencil className="w-4 h-4 mr-2" />
                           Modifica
@@ -325,7 +327,7 @@ export default function Tables() {
                             setIsNotesModalOpen(true);
                             setShowActionsFor(null);
                           }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                         >
                           <StickyNote className="w-4 h-4 mr-2" />
                           Note
@@ -336,7 +338,7 @@ export default function Tables() {
                             setIsReservationModalOpen(true);
                             setShowActionsFor(null);
                           }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                         >
                           <Calendar className="w-4 h-4 mr-2" />
                           Prenota
@@ -344,7 +346,7 @@ export default function Tables() {
                         {table.merged_with && table.merged_with.length > 0 && (
                           <button
                             onClick={() => handleUnmergeTable(table.id)}
-                            className="flex items-center w-full px-4 py-2 text-sm text-blue-600 hover:bg-gray-100"
+                            className="flex items-center w-full px-4 py-2 text-sm text-blue-600 hover:bg-gray-50 transition-colors"
                           >
                             <Unlink className="w-4 h-4 mr-2" />
                             Separa tavoli
@@ -352,7 +354,7 @@ export default function Tables() {
                         )}
                         <button
                           onClick={() => handleDeleteTable(table.id)}
-                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Elimina
@@ -373,7 +375,7 @@ export default function Tables() {
               )}
             </div>
             {table.notes && (
-              <div className="mb-3 text-sm text-gray-600 bg-white bg-opacity-50 p-2 rounded">
+              <div className="mb-3 text-sm text-gray-600 bg-white/50 backdrop-blur-sm p-2 rounded-lg shadow-sm">
                 <div className="flex items-start gap-2">
                   <StickyNote className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <p className="flex-1">{table.notes}</p>
@@ -384,7 +386,7 @@ export default function Tables() {
               {table.status !== 'free' && (
                 <button
                   onClick={() => handleStatusChange(table.id, 'free')}
-                  className="flex-1 px-2 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200"
+                  className="flex-1 px-2 py-1 text-sm bg-green-100/80 text-green-700 rounded-lg hover:bg-green-200/80 transition-colors backdrop-blur-sm"
                 >
                   Libera
                 </button>
@@ -392,7 +394,7 @@ export default function Tables() {
               {table.status !== 'occupied' && (
                 <button
                   onClick={() => handleStatusChange(table.id, 'occupied')}
-                  className="flex-1 px-2 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+                  className="flex-1 px-2 py-1 text-sm bg-red-100/80 text-red-700 rounded-lg hover:bg-red-200/80 transition-colors backdrop-blur-sm"
                 >
                   Occupa
                 </button>
@@ -400,7 +402,7 @@ export default function Tables() {
               {table.status !== 'reserved' && (
                 <button
                   onClick={() => handleStatusChange(table.id, 'reserved')}
-                  className="flex-1 px-2 py-1 text-sm bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200"
+                  className="flex-1 px-2 py-1 text-sm bg-yellow-100/80 text-yellow-700 rounded-lg hover:bg-yellow-200/80 transition-colors backdrop-blur-sm"
                 >
                   Prenota
                 </button>
@@ -413,7 +415,7 @@ export default function Tables() {
 
       <button
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-20 md:bottom-8 right-8 p-4 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+        className="fixed bottom-20 md:bottom-8 right-8 p-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full shadow-lg hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all hover:scale-110"
       >
         <Plus className="w-6 h-6" />
       </button>
