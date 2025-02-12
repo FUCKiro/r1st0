@@ -139,7 +139,7 @@ export default function TableMap({ tables, onTableClick, onTableMove }: Props) {
 
   return (
     <div 
-      className="relative w-full h-[calc(100vh-12rem)] bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 overflow-hidden shadow-inner"
+      className="relative w-full h-[calc(100vh-12rem)] bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 overflow-auto shadow-inner"
       onMouseLeave={handleMouseLeave}
     >
       {tables.map((table) => {
@@ -163,22 +163,22 @@ export default function TableMap({ tables, onTableClick, onTableMove }: Props) {
             style={{
               transform: `translate(${position.x}px, ${position.y}px)`,
               position: 'absolute',
-              transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+              transition: isDragging ? 'none' : 'all 0.2s ease-out',
               cursor: isDragging ? 'grabbing' : 'grab',
               zIndex: isDragging ? 9999 : 1,
               touchAction: 'none',
               willChange: 'transform'
             }}
-            className={`p-4 rounded-lg shadow-md w-48 ${
+            className={`p-2 rounded-lg shadow-md w-24 sm:w-28 md:w-32 hover:scale-105 ${
               table.status === 'occupied' ? 'bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-500 shadow-red-100' :
               table.status === 'reserved' ? 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-500 shadow-yellow-100' :
               'bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-500 shadow-green-100'
             }`}
           >
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold text-gray-800">Tavolo {table.number}</h3>
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="font-semibold text-gray-800 text-xs sm:text-sm">Tavolo {table.number}</h3>
               <span
-                className={`px-2 py-1 rounded-full text-xs ${
+                className={`px-1 py-0.5 rounded-full text-[10px] sm:text-xs ${
                   table.status === 'occupied' ? 'bg-red-100/80 text-red-800 backdrop-blur-sm' :
                   table.status === 'reserved' ? 'bg-yellow-100/80 text-yellow-800 backdrop-blur-sm' :
                   'bg-green-100/80 text-green-800 backdrop-blur-sm'
@@ -188,8 +188,8 @@ export default function TableMap({ tables, onTableClick, onTableMove }: Props) {
                  table.status === 'reserved' ? 'Prenotato' : 'Libero'}
               </span>
             </div>
-            <div className="flex items-center text-gray-600 text-sm bg-white/50 rounded-md px-2 py-1">
-              <Users className="w-4 h-4 mr-1" />
+            <div className="flex items-center text-gray-600 text-[10px] sm:text-xs bg-white/50 rounded-md px-1 py-0.5">
+              <Users className="w-3 h-3 mr-1" />
               <span>{table.capacity}</span>
             </div>
           </div>
