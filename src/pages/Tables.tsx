@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Users, X, MoreVertical, Pencil, Trash2, StickyNote, Link2, Unlink } from 'lucide-react';
-import { getTables, updateTableStatus, createTable, updateTable, deleteTable, updateTableNotes, mergeTables, unmergeTable, useTableSubscription, type Table } from '@/lib/tables';
+import { Plus, Users, X, MoreVertical, Pencil, Trash2, StickyNote, Link2, Unlink, Map, Calendar } from 'lucide-react';
+import { getTables, updateTableStatus, createTable, updateTable, deleteTable, updateTableNotes, mergeTables, unmergeTable, useTableSubscription, updateTablePosition, type Table } from '@/lib/tables';
+import TableMap from '@/components/TableMap';
+import ReservationModal from '@/components/ReservationModal';
 
 export default function Tables() {
   const [filter, setFilter] = useState('all');
@@ -19,6 +21,9 @@ export default function Tables() {
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [isMergeMode, setIsMergeMode] = useState(false);
   const [selectedTablesToMerge, setSelectedTablesToMerge] = useState<number[]>([]);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+  const [selectedTableForReservation, setSelectedTableForReservation] = useState<Table | null>(null);
 
   const loadTables = useCallback(async () => {
     try {
@@ -191,6 +196,22 @@ export default function Tables() {
             <option value="reserved">Prenotati</option>
           </select>
           <button
+            onClick={() => setViewMode(prev => prev === 'list' ? 'map' : 'list')}
+            className="px-4 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
+          >
+            {viewMode === 'list' ? (
+              <>
+                <Map className="w-4 h-4 inline-block mr-2" />
+                Mappa
+              </>
+            ) : (
+              <>
+                <Users className="w-4 h-4 inline-block mr-2" />
+                Lista
+              </>
+            )}
+          </button>
+          <button
             onClick={() => {
               setIsMergeMode(!isMergeMode);
               setSelectedTablesToMerge([]);
@@ -231,7 +252,21 @@ export default function Tables() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {viewMode === 'map' ? (
+        <TableMap
+          tables={filteredTables}
+          onTableClick={(table) => {
+            if (isMergeMode) {
+              toggleTableSelection(table.id);
+            } else {
+              setSelectedTableForReservation(table);
+              setIsReservationModalOpen(true);
+            }
+          }}
+          onTableMove={updateTablePosition}
+        />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTables.map((table) => (
           <div
             key={table.id}
@@ -294,6 +329,17 @@ export default function Tables() {
                         >
                           <StickyNote className="w-4 h-4 mr-2" />
                           Note
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedTableForReservation(table);
+                            setIsReservationModalOpen(true);
+                            setShowActionsFor(null);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <Calendar className="w-4 h-4 mr-2" />
+                          Prenota
                         </button>
                         {table.merged_with && table.merged_with.length > 0 && (
                           <button
@@ -363,6 +409,7 @@ export default function Tables() {
           </div>
         ))}
       </div>
+      )}
 
       <button
         onClick={() => setIsModalOpen(true)}
@@ -562,6 +609,21 @@ export default function Tables() {
             </form>
           </div>
         </div>
+      )}
+      
+      {isReservationModalOpen && selectedTableForReservation && (
+        <ReservationModal
+          table={selectedTableForReservation}
+          onClose={() => {
+            setIsReservationModalOpen(false);
+            setSelectedTableForReservation(null);
+          }}
+          onSave={async () => {
+            await loadTables();
+            setIsReservationModalOpen(false);
+            setSelectedTableForReservation(null);
+          }}
+        />
       )}
     </div>
   );

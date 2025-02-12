@@ -9,8 +9,8 @@ export interface Table {
   location?: string;
   last_occupied_at?: string;
   merged_with?: number[];
-  x_position?: number;
-  y_position?: number;
+  x_position: number | null;
+  y_position: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -82,15 +82,21 @@ export function useTableSubscription(onUpdate: () => void) {
 }
 
 export async function updateTablePosition(id: number, x: number, y: number) {
+  // Ensure we have valid numbers and round to 2 decimal places
+  if (isNaN(x) || isNaN(y)) return;
+  
+  const safeX = Math.max(0, Math.round(x * 100) / 100);
+  const safeY = Math.max(0, Math.round(y * 100) / 100);
+
   const { error } = await supabase
     .from('tables')
     .update({
-      x_position: x,
-      y_position: y,
+      x_position: safeX,
+      y_position: safeY,
       updated_at: new Date().toISOString()
     })
     .eq('id', id);
-    
+
   if (error) throw error;
 }
 
