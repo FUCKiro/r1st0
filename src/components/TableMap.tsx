@@ -27,9 +27,12 @@ export default function TableMap({ tables, onTableClick, onTableMove }: Props) {
   useEffect(() => {
     const newPositions: Record<number, Position> = {};
     tables.forEach(table => {
+      // Usa la posizione dal database se disponibile
+      const index = Object.keys(newPositions).length;
+      const spacing = 200; // Spazio tra i tavoli
       newPositions[table.id] = {
-        x: table.x_position ?? 0,
-        y: table.y_position ?? 0
+        x: table.x_position ?? (100 + (index % 3) * spacing),
+        y: table.y_position ?? (100 + Math.floor(index / 3) * spacing)
       };
     });
     setPositions(newPositions);
