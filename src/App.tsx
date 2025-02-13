@@ -6,6 +6,7 @@ import Layout from '@/components/Layout';
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const Tables = lazy(() => import('@/pages/Tables'));
+const Menu = lazy(() => import('@/pages/Menu'));
 const Orders = lazy(() => import('@/pages/Orders'));
 const Inventory = lazy(() => import('@/pages/Inventory'));
 const Profile = lazy(() => import('@/pages/Profile'));
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/tables" replace />} />
             <Route path="tables" element={<Tables />} />
+            <Route path="menu" element={<Menu />} />
             <Route path="orders" element={<Orders />} />
             <Route path="inventory" element={<Inventory />} />
             <Route path="profile" element={<Profile />} />

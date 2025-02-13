@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { ListRestart as Restaurant, Receipt, Package, User } from 'lucide-react';
+import { ListRestart as Restaurant, Receipt, Package, User, ChefHat } from 'lucide-react';
 
 export default function Layout() {
   return (
@@ -14,6 +14,16 @@ export default function Layout() {
           >
             <Restaurant className="w-6 h-6" />
             <span className="hidden md:block ml-2">Tavoli</span>
+          </NavLink>
+          
+          <NavLink
+            to="/menu"
+            className={({ isActive }) =>
+              `flex items-center p-4 hover:text-red-500 ${isActive ? 'text-red-500' : 'text-gray-600'}`
+            }
+          >
+            <ChefHat className="w-6 h-6" />
+            <span className="hidden md:block ml-2">Menu</span>
           </NavLink>
           
           <NavLink
