@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Pencil, Trash2, ChefHat, Leaf, Wheat, Flame, X } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Leaf, Wheat, Flame, X } from 'lucide-react';
 import { getMenuCategories, getMenuItems, createMenuCategory, updateMenuCategory, deleteMenuCategory, createMenuItem, updateMenuItem, deleteMenuItem, type MenuCategory, type MenuItem } from '@/lib/menu';
 
 export default function Menu() {
