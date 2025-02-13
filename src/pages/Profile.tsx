@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { getCurrentUser, signOut } from '@/lib/auth';
 
-interface Profile {
-  full_name: string;
+type Profile = {
+  full_name: string | null;
   email: string;
   role: string;
-}
+};
 
 export default function Profile() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -54,7 +54,7 @@ export default function Profile() {
         <div className="space-y-4">
           <div>
             <h3 className="text-sm font-medium text-gray-500">Nome completo</h3>
-            <p className="mt-1 text-lg text-gray-900">{profile.full_name}</p>
+            <p className="mt-1 text-lg text-gray-900">{profile.full_name || 'Non specificato'}</p>
           </div>
           
           <div>
