@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, X, Mail, User, Key, Pencil } from 'lucide-react';
+import { Plus, Search, X, Mail, User, Key } from 'lucide-react';
 import { getWaiters, createWaiter, deleteWaiter, type Waiter } from '@/lib/waiters';
 
 export default function Waiters() {

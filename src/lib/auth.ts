@@ -70,7 +70,14 @@ export async function signOut() {
   if (error) throw error;
 }
 
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<{
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: string;
+  created_at: string;
+  updated_at: string;
+} | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
   
@@ -83,8 +90,8 @@ export async function getCurrentUser() {
     return profile;
   }
 
-  // Se il profilo non esiste, crealo come cameriere
-  const { data: newProfile, error } = await supabase.from('profiles').upsert({
+  // Se il profilo non esiste, crealo
+  const { error } = await supabase.from('profiles').upsert({
     id: user.id,
     email: user.email,
     role: 'waiter',
@@ -92,5 +99,13 @@ export async function getCurrentUser() {
   });
 
   if (error) throw error;
-  return profile;
+  
+  // Ricarica il profilo appena creato
+  const { data: newProfile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+    
+  return newProfile;
 }
