@@ -1,18 +1,22 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Clock, ChefHat, Receipt, Ban, CheckCircle, DollarSign, X } from 'lucide-react';
-import { getOrders, createOrder, updateOrderStatus, updateOrderItemStatus, deleteOrder, useOrdersSubscription, type Order } from '@/lib/orders';
-import { getTables } from '@/lib/tables';
-import { getMenuItems } from '@/lib/menu';
+import { Plus, Search, Clock, ChefHat, Receipt, Ban, CheckCircle, DollarSign, X, PlusCircle } from 'lucide-react';
+import { getOrders, createOrder, addToOrder, updateOrderStatus, updateOrderItemStatus, deleteOrder, useOrdersSubscription, type Order } from '@/lib/orders';
+import { getTables, type Table } from '@/lib/tables';
+import { getMenuItems, getMenuCategories, type MenuItem, type MenuCategory } from '@/lib/menu';
 
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddToOrderModalOpen, setIsAddToOrderModalOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<Order['status'] | 'all'>('all');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [tables, setTables] = useState<any[]>([]);
-  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [tables, setTables] = useState<Table[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [newOrder, setNewOrder] = useState({
     table_id: '',
     notes: '',
@@ -22,12 +26,32 @@ export default function Orders() {
   useEffect(() => {
     loadOrders();
     loadTables();
-    loadMenuItems();
+    loadMenuData();
   }, []);
+
+  useEffect(() => {
+    // Seleziona la prima categoria disponibile all'avvio
+    if (categories.length > 0 && !selectedCategoryId) {
+      setSelectedCategoryId(categories[0].id);
+    }
+  }, [categories]);
 
   useEffect(() => {
     useOrdersSubscription(loadOrders);
   }, []);
+
+  const loadMenuData = async () => {
+    try {
+      const [itemsData, categoriesData] = await Promise.all([
+        getMenuItems(),
+        getMenuCategories()
+      ]);
+      setMenuItems(itemsData);
+      setCategories(categoriesData);
+    } catch (err) {
+      console.error('Error loading menu data:', err);
+    }
+  };
 
   const loadOrders = async () => {
     try {
@@ -47,15 +71,6 @@ export default function Orders() {
       setTables(data);
     } catch (err) {
       console.error('Error loading tables:', err);
-    }
-  };
-
-  const loadMenuItems = async () => {
-    try {
-      const data = await getMenuItems();
-      setMenuItems(data);
-    } catch (err) {
-      console.error('Error loading menu items:', err);
     }
   };
 
@@ -82,6 +97,34 @@ export default function Orders() {
       await loadOrders();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore nella creazione dell\'ordine');
+    }
+  };
+
+  const handleAddToOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedOrderId) return;
+
+    try {
+      await addToOrder(
+        selectedOrderId,
+        newOrder.items
+          .filter(item => item.menu_item_id && item.quantity > 0)
+          .map(item => ({
+            menu_item_id: parseInt(item.menu_item_id),
+            quantity: item.quantity,
+            notes: item.notes || undefined
+          }))
+      );
+      setIsAddToOrderModalOpen(false);
+      setSelectedOrderId(null);
+      setNewOrder({
+        table_id: '',
+        notes: '',
+        items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+      });
+      await loadOrders();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nell\'aggiunta di piatti all\'ordine');
     }
   };
 
@@ -284,6 +327,25 @@ export default function Orders() {
                   </div>
                 ))}
               </div>
+              
+              <div className="flex justify-end mb-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedOrderId(order.id);
+                    setNewOrder({
+                      table_id: order.table_id.toString(),
+                      notes: '',
+                      items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+                    });
+                    setIsAddToOrderModalOpen(true);
+                  }}
+                  className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors flex items-center gap-1"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  Aggiungi piatti
+                </button>
+              </div>
 
               {order.notes && (
                 <div className="mb-4 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
@@ -344,101 +406,116 @@ export default function Orders() {
             </div>
 
             <form onSubmit={handleCreateOrder} className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="table" className="block text-sm font-medium text-gray-700">
-                    Tavolo
-                  </label>
-                  <select
-                    id="table"
-                    required
-                    value={newOrder.table_id}
-                    onChange={(e) => setNewOrder(prev => ({ ...prev, table_id: e.target.value }))}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                  >
-                    <option value="">Seleziona tavolo</option>
-                    {tables.map(table => (
-                      <option key={table.id} value={table.id}>
-                        Tavolo {table.number} ({table.capacity} posti)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-                    Note ordine
-                  </label>
-                  <textarea
-                    id="notes"
-                    rows={2}
-                    value={newOrder.notes}
-                    onChange={(e) => setNewOrder(prev => ({ ...prev, notes: e.target.value }))}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                    placeholder="Note opzionali per l'ordine..."
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium text-gray-900">Piatti</h3>
-                    <button
-                      type="button"
-                      onClick={addOrderItem}
-                      className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+              <div className="flex gap-4">
+                <div className="w-1/3 space-y-4">
+                  <div>
+                    <label htmlFor="table" className="block text-sm font-medium text-gray-700">
+                      Tavolo
+                    </label>
+                    <select
+                      id="table"
+                      required
+                      value={newOrder.table_id}
+                      onChange={(e) => setNewOrder(prev => ({ ...prev, table_id: e.target.value }))}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                     >
-                      Aggiungi piatto
-                    </button>
+                      <option value="">Seleziona tavolo</option>
+                      {tables.map(table => (
+                        <option key={table.id} value={table.id}>
+                          Tavolo {table.number} ({table.capacity} posti)
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
-                  {newOrder.items.map((item, index) => (
-                    <div key={index} className="flex gap-4 items-start p-4 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <select
-                          required
-                          value={item.menu_item_id}
-                          onChange={(e) => updateOrderItem(index, 'menu_item_id', e.target.value)}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                  <div>
+                    <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+                      Note ordine
+                    </label>
+                    <textarea
+                      id="notes"
+                      rows={2}
+                      value={newOrder.notes}
+                      onChange={(e) => setNewOrder(prev => ({ ...prev, notes: e.target.value }))}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                      placeholder="Note opzionali per l'ordine..."
+                    />
+                  </div>
+                </div>
+
+                <div className="w-2/3 border-l border-gray-200 pl-4">
+                  <div className="flex gap-4 h-[calc(100vh-20rem)] overflow-hidden">
+                    <div className="w-48 border-r border-gray-200 pr-4 space-y-2 overflow-y-auto">
+                      {categories.map(category => (
+                        <button
+                          key={category.id}
+                          onClick={() => setSelectedCategoryId(category.id)}
+                          className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors ${
+                            selectedCategoryId === category.id
+                              ? 'bg-red-50 text-red-700 font-medium'
+                              : 'text-gray-700'
+                          }`}
                         >
-                          <option value="">Seleziona piatto</option>
-                          {menuItems.map(menuItem => (
-                            <option key={menuItem.id} value={menuItem.id}>
-                              {menuItem.name} - €{menuItem.price}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="w-24">
-                        <input
-                          type="number"
-                          min="1"
-                          required
-                          value={item.quantity}
-                          onChange={(e) => updateOrderItem(index, 'quantity', parseInt(e.target.value))}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                        />
-                      </div>
-
-                      <div className="flex-1">
-                        <input
-                          type="text"
-                          value={item.notes}
-                          onChange={(e) => updateOrderItem(index, 'notes', e.target.value)}
-                          placeholder="Note per il piatto..."
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                        />
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => removeOrderItem(index)}
-                        className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
+                          {category.name}
+                        </button>
+                      ))}
                     </div>
-                  ))}
+
+                    <div className="flex-1 overflow-y-auto">
+                      <div className="flex justify-end mb-4">
+                        <button
+                          type="button"
+                          onClick={addOrderItem}
+                          className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                        >
+                          Aggiungi piatto
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3">
+                        {newOrder.items.map((item, index) => (
+                          <div key={index} className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg">
+                            <div className="flex-1">
+                              <select
+                                required
+                                value={item.menu_item_id}
+                                onChange={(e) => updateOrderItem(index, 'menu_item_id', e.target.value)}
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                              >
+                                <option value="">Seleziona piatto</option>
+                                {menuItems
+                                  .filter(menuItem => menuItem.category_id === selectedCategoryId)
+                                  .map(menuItem => (
+                                    <option key={menuItem.id} value={menuItem.id}>
+                                      {menuItem.name} - €{menuItem.price.toFixed(2)}
+                                    </option>
+                                  ))}
+                              </select>
+                            </div>
+
+                            <div className="w-20">
+                              <input
+                                type="number"
+                                min="1"
+                                required
+                                value={item.quantity}
+                                onChange={(e) => updateOrderItem(index, 'quantity', parseInt(e.target.value))}
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                              />
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => removeOrderItem(index)}
+                              className="p-1.5 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -462,6 +539,132 @@ export default function Orders() {
                   className="px-4 py-2 text-sm font-medium text-white bg-red-500 border border-transparent rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                   Crea Ordine
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Aggiungi all'Ordine */}
+      {isAddToOrderModalOpen && selectedOrderId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Aggiungi piatti all'ordine #{selectedOrderId}
+              </h2>
+              <button
+                onClick={() => {
+                  setIsAddToOrderModalOpen(false);
+                  setSelectedOrderId(null);
+                  setNewOrder({
+                    table_id: '',
+                    notes: '',
+                    items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+                  });
+                }}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddToOrder} className="p-6">
+              <div className="flex gap-4 h-[calc(100vh-15rem)] overflow-hidden">
+                <div className="w-48 border-r border-gray-200 pr-4 space-y-2 overflow-y-auto">
+                  {categories.map(category => (
+                    <button
+                      key={category.id}
+                      onClick={() => setSelectedCategoryId(category.id)}
+                      className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors ${
+                        selectedCategoryId === category.id
+                          ? 'bg-red-50 text-red-700 font-medium'
+                          : 'text-gray-700'
+                      }`}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex-1 overflow-y-auto">
+                  <div className="flex justify-end mb-4">
+                    <button
+                      type="button"
+                      onClick={addOrderItem}
+                      className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                    >
+                      Aggiungi piatto
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3">
+                    {newOrder.items.map((item, index) => (
+                      <div key={index} className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <select
+                            required
+                            value={item.menu_item_id}
+                            onChange={(e) => updateOrderItem(index, 'menu_item_id', e.target.value)}
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                          >
+                            <option value="">Seleziona piatto</option>
+                            {menuItems
+                              .filter(menuItem => menuItem.category_id === selectedCategoryId)
+                              .map(menuItem => (
+                                <option key={menuItem.id} value={menuItem.id}>
+                                  {menuItem.name} - €{menuItem.price.toFixed(2)}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+
+                        <div className="w-20">
+                          <input
+                            type="number"
+                            min="1"
+                            required
+                            value={item.quantity}
+                            onChange={(e) => updateOrderItem(index, 'quantity', parseInt(e.target.value))}
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                          />
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => removeOrderItem(index)}
+                          className="p-1.5 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddToOrderModalOpen(false);
+                    setSelectedOrderId(null);
+                    setNewOrder({
+                      table_id: '',
+                      notes: '',
+                      items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+                    });
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 border border-transparent rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  Aggiungi all'ordine
                 </button>
               </div>
             </form>

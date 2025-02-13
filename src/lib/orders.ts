@@ -89,6 +89,26 @@ export async function createOrder(data: {
   return order;
 }
 
+export async function addToOrder(orderId: number, items: Array<{
+  menu_item_id: number;
+  quantity: number;
+  notes?: string;
+}>) {
+  const { error: itemsError } = await supabase
+    .from('order_items')
+    .insert(
+      items.map(item => ({
+        order_id: orderId,
+        menu_item_id: item.menu_item_id,
+        quantity: item.quantity,
+        notes: item.notes,
+        status: 'pending'
+      }))
+    );
+
+  if (itemsError) throw itemsError;
+}
+
 export async function updateOrderStatus(
   orderId: number,
   status: Order['status']
