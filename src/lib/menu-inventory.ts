@@ -48,12 +48,12 @@ export async function getMenuItemIngredients(menuItemId: number): Promise<MenuIt
   return data.map(item => ({
     menu_item_id: item.menu_item_id,
     inventory_item_id: item.inventory_item_id,
-    quantity: item.quantity,
+    quantity: Number(item.quantity),
     unit: item.unit,
     inventory_item: {
       id: item.inventory_item.id,
       name: item.inventory_item.name,
-      quantity: item.inventory_item.quantity,
+      quantity: Number(item.inventory_item.quantity),
       unit: item.inventory_item.unit
     }
   }));
@@ -93,8 +93,8 @@ export async function updateMenuItemIngredients(
 
 interface IngredientAvailability {
   ingredient_name: string;
-  required_quantity: number;
-  available_quantity: number;
+  required_quantity: string | number;
+  available_quantity: string | number;
   unit: string;
 }
 
@@ -107,11 +107,11 @@ export async function checkMenuItemAvailability(menuItemId: number): Promise<Men
 
   const ingredients = data || [];
   const missingIngredients = ingredients
-    .filter((ing: IngredientAvailability) => ing.available_quantity < ing.required_quantity)
-    .map((ing: IngredientAvailability) => ({
+    .filter(ing => Number(ing.available_quantity) < Number(ing.required_quantity))
+    .map(ing => ({
       name: ing.ingredient_name,
-      required: ing.required_quantity,
-      available: ing.available_quantity,
+      required: Number(ing.required_quantity),
+      available: Number(ing.available_quantity),
       unit: ing.unit
     }));
 
