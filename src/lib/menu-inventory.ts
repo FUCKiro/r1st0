@@ -1,5 +1,12 @@
 import { supabase } from './supabase';
 
+export interface InventoryIngredient {
+  ingredient_name: string;
+  required_quantity: number;
+  available_quantity: number;
+  unit: string;
+}
+
 export interface MenuItemIngredient {
   menu_item_id: number;
   inventory_item_id: number;
@@ -43,7 +50,20 @@ export async function getMenuItemIngredients(menuItemId: number): Promise<MenuIt
 
   if (error) throw error;
   
-  return data || [];
+  if (!data) return [];
+
+  return data.map(item => ({
+    menu_item_id: item.menu_item_id,
+    inventory_item_id: item.inventory_item_id,
+    quantity: item.quantity,
+    unit: item.unit,
+    inventory_item: {
+      id: item.inventory_item.id,
+      name: item.inventory_item.name,
+      quantity: item.inventory_item.quantity,
+      unit: item.inventory_item.unit
+    }
+  }));
 }
 
 // Aggiorna gli ingredienti di un piatto
@@ -81,7 +101,7 @@ export async function updateMenuItemIngredients(
 // Verifica la disponibilità di un piatto
 export async function checkMenuItemAvailability(menuItemId: number): Promise<MenuItemAvailability> {
   const { data, error } = await supabase
-    .rpc('check_ingredients_availability', { p_menu_item_id: menuItemId });
+    .rpc<InventoryIngredient>('check_ingredients_availability', { p_menu_item_id: menuItemId });
 
   if (error) throw error;
 
