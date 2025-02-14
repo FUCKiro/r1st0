@@ -385,7 +385,7 @@ export default function Orders() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full h-[95vh] md:h-auto md:max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-semibold text-gray-900">
                 Nuovo Ordine
@@ -405,9 +405,9 @@ export default function Orders() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateOrder} className="p-6">
-              <div className="flex gap-4">
-                <div className="w-1/3 space-y-4">
+            <form onSubmit={handleCreateOrder} className="flex-1 overflow-hidden flex flex-col">
+              <div className="flex flex-col md:flex-row gap-4 p-6 overflow-y-auto">
+                <div className="w-full md:w-1/3 space-y-4">
                   <div>
                     <label htmlFor="table" className="block text-sm font-medium text-gray-700">
                       Tavolo
@@ -443,14 +443,14 @@ export default function Orders() {
                   </div>
                 </div>
 
-                <div className="w-2/3 border-l border-gray-200 pl-4">
-                  <div className="flex gap-4 h-[calc(100vh-20rem)] overflow-hidden">
-                    <div className="w-48 border-r border-gray-200 pr-4 space-y-2 overflow-y-auto">
+                <div className="w-full md:w-2/3 md:border-l border-gray-200 md:pl-4">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="w-full md:w-48 border-b md:border-b-0 md:border-r border-gray-200 pb-4 md:pb-0 md:pr-4 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                       {categories.map(category => (
                         <button
                           key={category.id}
                           onClick={() => setSelectedCategoryId(category.id)}
-                          className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors ${
+                          className={`flex-shrink-0 text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap ${
                             selectedCategoryId === category.id
                               ? 'bg-red-50 text-red-700 font-medium'
                               : 'text-gray-700'
@@ -474,13 +474,13 @@ export default function Orders() {
 
                       <div className="grid grid-cols-1 gap-3">
                         {newOrder.items.map((item, index) => (
-                          <div key={index} className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg">
-                            <div className="flex-1">
+                          <div key={index} className="flex flex-col sm:flex-row gap-2 p-3 bg-gray-50 rounded-lg">
+                            <div className="flex-1 min-w-0">
                               <select
                                 required
                                 value={item.menu_item_id}
                                 onChange={(e) => updateOrderItem(index, 'menu_item_id', e.target.value)}
-                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 [&_*]:text-left"
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
                               >
                                 <option value="">Seleziona piatto</option>
                                 {menuItems
@@ -493,7 +493,7 @@ export default function Orders() {
                               </select>
                             </div>
 
-                            <div className="w-20">
+                            <div className="w-full sm:w-20">
                               <input
                                 type="number"
                                 min="1"
@@ -519,7 +519,7 @@ export default function Orders() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex justify-end gap-3 p-6 border-t bg-white">
                 <button
                   type="button"
                   onClick={() => {
@@ -549,7 +549,7 @@ export default function Orders() {
       {/* Modal Aggiungi all'Ordine */}
       {isAddToOrderModalOpen && selectedOrderId && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full h-[95vh] md:h-auto overflow-hidden flex flex-col">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-semibold text-gray-900">
                 Aggiungi piatti all'ordine #{selectedOrderId}
@@ -570,14 +570,14 @@ export default function Orders() {
               </button>
             </div>
 
-            <form onSubmit={handleAddToOrder} className="p-6">
-              <div className="flex gap-4 h-[calc(100vh-15rem)] overflow-hidden">
-                <div className="w-48 border-r border-gray-200 pr-4 space-y-2 overflow-y-auto">
+            <form onSubmit={handleAddToOrder} className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 flex flex-col md:flex-row gap-4 p-6 overflow-y-auto">
+                <div className="flex flex-row md:flex-col md:w-48 overflow-x-auto md:overflow-y-auto md:border-r border-gray-200 md:pr-4">
                   {categories.map(category => (
                     <button
                       key={category.id}
                       onClick={() => setSelectedCategoryId(category.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors ${
+                      className={`flex-shrink-0 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap ${
                         selectedCategoryId === category.id
                           ? 'bg-red-50 text-red-700 font-medium'
                           : 'text-gray-700'
@@ -588,7 +588,7 @@ export default function Orders() {
                   ))}
                 </div>
 
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto min-h-0">
                   <div className="flex justify-end mb-4">
                     <button
                       type="button"
@@ -600,14 +600,14 @@ export default function Orders() {
                   </div>
 
                   <div className="grid grid-cols-1 gap-3">
-                    {newOrder.items.map((item, index) => (
-                      <div key={index} className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg">
-                        <div className="flex-1">
+                    {newOrder.items.map((item, index) => ( 
+                      <div key={index} className="flex flex-col sm:flex-row gap-2 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex-1 min-w-0">
                           <select
                             required
                             value={item.menu_item_id}
                             onChange={(e) => updateOrderItem(index, 'menu_item_id', e.target.value)}
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 [&_*]:text-left"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
                           >
                             <option value="">Seleziona piatto</option>
                             {menuItems
@@ -620,7 +620,7 @@ export default function Orders() {
                           </select>
                         </div>
 
-                        <div className="w-20">
+                        <div className="w-full sm:w-20">
                           <input
                             type="number"
                             min="1"
@@ -644,7 +644,7 @@ export default function Orders() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex justify-end gap-3 p-6 border-t bg-white">
                 <button
                   type="button"
                   onClick={() => {

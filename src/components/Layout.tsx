@@ -80,56 +80,56 @@ export default function Layout() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <nav className="fixed bottom-0 w-full bg-white border-t border-gray-200 md:relative md:w-64 md:border-r md:border-t-0">
-        <div className="flex justify-around md:flex-col md:h-full md:p-4">
+    <div className="flex h-screen bg-gray-100 relative">
+      <nav className="fixed bottom-0 w-full bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-lg md:shadow-none md:relative md:w-64 md:border-r md:border-t-0 z-50">
+        <div className="grid grid-cols-5 md:grid-cols-1 md:h-full md:p-4 py-1 md:py-4">
           <NavLink
             to="/tables"
             className={({ isActive }) =>
-              `flex items-center p-4 hover:text-red-500 ${
+              `flex flex-col md:flex-row items-center justify-center p-1 md:p-4 hover:text-red-500 ${
                 isActive ? 'text-red-500' : 'text-gray-600'
               }`
             }
           >
-            <Restaurant className="w-6 h-6" />
-            <span className="hidden md:block ml-2">Tavoli</span>
+            <Restaurant className="w-5 h-5 md:w-6 md:h-6" />
+            <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Tavoli</span>
           </NavLink>
           
           <NavLink
             to="/menu"
             className={({ isActive }) =>
-              `flex items-center p-4 hover:text-red-500 ${
+              `flex flex-col md:flex-row items-center justify-center p-1 md:p-4 hover:text-red-500 ${
                 isActive ? 'text-red-500' : 'text-gray-600'
               }`
             }
           >
-            <ChefHat className="w-6 h-6" />
-            <span className="hidden md:block ml-2">Menu</span>
+            <ChefHat className="w-5 h-5 md:w-6 md:h-6" />
+            <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Menu</span>
           </NavLink>
           
           <NavLink
             to="/orders"
             className={({ isActive }) =>
-              `flex items-center p-4 hover:text-red-500 ${
+              `flex flex-col md:flex-row items-center justify-center p-1 md:p-4 hover:text-red-500 ${
                 isActive ? 'text-red-500' : 'text-gray-600'
               }`
             }
           >
-            <Receipt className="w-6 h-6" />
-            <span className="hidden md:block ml-2">Ordini</span>
+            <Receipt className="w-5 h-5 md:w-6 md:h-6" />
+            <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Ordini</span>
           </NavLink>
           
           {hasPermission(['admin', 'manager']) && (
             <NavLink
               to="/inventory"
               className={({ isActive }) =>
-                `flex items-center p-4 hover:text-red-500 ${
+                `flex flex-col md:flex-row items-center justify-center p-1 md:p-4 hover:text-red-500 ${
                   isActive ? 'text-red-500' : 'text-gray-600'
                 }`
               }
             >
-              <Package className="w-6 h-6" />
-              <span className="hidden md:block ml-2">Magazzino</span>
+              <Package className="w-5 h-5 md:w-6 md:h-6" />
+              <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Magazzino</span>
             </NavLink>
           )}
 
@@ -137,13 +137,13 @@ export default function Layout() {
             <NavLink
               to="/waiters"
               className={({ isActive }) =>
-                `flex items-center p-4 hover:text-red-500 ${
+                `flex flex-col md:flex-row items-center justify-center p-1 md:p-4 hover:text-red-500 ${
                   isActive ? 'text-red-500' : 'text-gray-600'
                 }`
               }
             >
-              <Users className="w-6 h-6" />
-              <span className="hidden md:block ml-2">Camerieri</span>
+              <Users className="w-5 h-5 md:w-6 md:h-6" />
+              <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Camerieri</span>
             </NavLink>
           )}
           
@@ -151,28 +151,28 @@ export default function Layout() {
             <NavLink
               to="/profile"
               className={({ isActive }) =>
-                `flex items-center p-4 hover:text-red-500 ${
+                `flex flex-col md:flex-row items-center justify-center p-1 md:p-4 hover:text-red-500 ${
                   isActive ? 'text-red-500' : 'text-gray-600'
                 }`
               }
             >
-              <User className="w-6 h-6" />
-              <span className="hidden md:block ml-2">Profilo</span>
+              <User className="w-5 h-5 md:w-6 md:h-6" />
+              <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Profilo</span>
             </NavLink>
           )}
 
           {/* Il pulsante di logout è sempre visibile */}
           <button
             onClick={handleSignOut}
-            className="flex items-center p-4 text-gray-600 hover:text-red-500"
+            className="flex flex-col md:flex-row items-center justify-center p-1 md:p-4 text-gray-600 hover:text-red-500"
           >
-            <LogOut className="w-6 h-6" />
-            <span className="hidden md:block ml-2">Esci</span>
+            <LogOut className="w-5 h-5 md:w-6 md:h-6" />
+            <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Esci</span>
           </button>
         </div>
       </nav>
       
-      <main className="flex-1 p-4 md:p-8 mb-16 md:mb-0 overflow-auto">
+      <main className="flex-1 p-4 md:p-8 pb-20 md:pb-8 overflow-auto">
         <Outlet />
       </main>
     </div>

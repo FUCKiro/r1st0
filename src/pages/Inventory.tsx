@@ -143,115 +143,94 @@ export default function Inventory() {
       </div>
 
       <div className="bg-white/50 backdrop-blur-sm rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50/50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Articolo
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Quantità
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Unità
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Scorta Minima
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stato
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Azioni
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white/50 divide-y divide-gray-200">
-              {filteredItems.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <Package className="w-5 h-5 text-gray-400 mr-2" />
-                      <div className="text-sm font-medium text-gray-900">{item.name}</div>
+        <div className="divide-y divide-gray-200">
+          {filteredItems.map((item) => (
+            <div key={item.id} className="p-4 hover:bg-gray-50/50 transition-colors">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center mb-2">
+                    <Package className="w-5 h-5 text-gray-400 mr-2" />
+                    <h3 className="font-medium text-gray-900">{item.name}</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                    <div>
+                      <span className="text-gray-500">Quantità:</span>
+                      <span className="ml-1 font-medium">{item.quantity} {item.unit}</span>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{item.quantity}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{item.unit}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{item.minimum_quantity}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {item.quantity <= item.minimum_quantity ? (
-                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                        <AlertTriangle className="w-4 h-4 mr-1" />
-                        Sotto scorta
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                        Disponibile
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    <button
-                      onClick={() => {
-                        setSelectedItem(item);
-                        setMovementType('in');
-                        setMovementQuantity('');
-                        setMovementNotes('');
-                        setIsMovementModalOpen(true);
-                      }}
-                      className="text-blue-600 hover:text-blue-900"
-                      title="Carico"
-                    >
-                      <ArrowDown className="w-5 h-5 inline-block" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedItem(item);
-                        setMovementType('out');
-                        setMovementQuantity('');
-                        setMovementNotes('');
-                        setIsMovementModalOpen(true);
-                      }}
-                      className="text-orange-600 hover:text-orange-900"
-                      title="Scarico"
-                    >
-                      <ArrowUp className="w-5 h-5 inline-block" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedItem(item);
-                        setFormData({
-                          name: item.name,
-                          quantity: item.quantity.toString(),
-                          unit: item.unit,
-                          minimumQuantity: item.minimum_quantity.toString()
-                        });
-                        setIsModalOpen(true);
-                      }}
-                      className="text-indigo-600 hover:text-indigo-900"
-                      title="Modifica"
-                    >
-                      <Pencil className="w-5 h-5 inline-block" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-red-600 hover:text-red-900"
-                      title="Elimina"
-                    >
-                      <Trash2 className="w-5 h-5 inline-block" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <div>
+                      <span className="text-gray-500">Scorta minima:</span>
+                      <span className="ml-1 font-medium">{item.minimum_quantity} {item.unit}</span>
+                    </div>
+                    <div className="col-span-2 sm:col-span-1">
+                      {item.quantity <= item.minimum_quantity ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          <AlertTriangle className="w-4 h-4 mr-1" />
+                          Sotto scorta
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          Disponibile
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                  <button
+                    onClick={() => {
+                      setSelectedItem(item);
+                      setMovementType('in');
+                      setMovementQuantity('');
+                      setMovementNotes('');
+                      setIsMovementModalOpen(true);
+                    }}
+                    className="flex-1 sm:flex-none px-3 py-1.5 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                  >
+                    <ArrowDown className="w-4 h-4 sm:inline-block hidden" />
+                    <span className="sm:hidden">Carico</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedItem(item);
+                      setMovementType('out');
+                      setMovementQuantity('');
+                      setMovementNotes('');
+                      setIsMovementModalOpen(true);
+                    }}
+                    className="flex-1 sm:flex-none px-3 py-1.5 text-sm bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
+                  >
+                    <ArrowUp className="w-4 h-4 sm:inline-block hidden" />
+                    <span className="sm:hidden">Scarico</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedItem(item);
+                      setFormData({
+                        name: item.name,
+                        quantity: item.quantity.toString(),
+                        unit: item.unit,
+                        minimumQuantity: item.minimum_quantity.toString()
+                      });
+                      setIsModalOpen(true);
+                    }}
+                    className="flex-1 sm:flex-none px-3 py-1.5 text-sm bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors"
+                  >
+                    <Pencil className="w-4 h-4 sm:inline-block hidden" />
+                    <span className="sm:hidden">Modifica</span>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="flex-1 sm:flex-none px-3 py-1.5 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4 sm:inline-block hidden" />
+                    <span className="sm:hidden">Elimina</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
