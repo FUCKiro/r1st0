@@ -39,12 +39,7 @@ export async function signInWithEmail(email: string, password: string) {
 export async function signUpWithEmail(email: string, password: string, fullName: string) {
   const { error: signUpError, data } = await supabase.auth.signUp({
     email,
-    password,
-    options: {
-      data: {
-        role: 'waiter'
-      }
-    }
+    password
   });
 
   if (signUpError) throw signUpError;
@@ -55,14 +50,11 @@ export async function signUpWithEmail(email: string, password: string, fullName:
     id: data.user.id,
     email,
     full_name: fullName,
-    role: 'waiter',
+    role: 'admin',
     updated_at: new Date().toISOString()
   });
 
   if (profileError) throw profileError;
-
-  // Forza il logout per evitare il login automatico
-  await supabase.auth.signOut();
 }
 
 export async function signOut() {
