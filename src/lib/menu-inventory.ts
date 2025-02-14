@@ -5,7 +5,7 @@ export interface MenuItemIngredient {
   inventory_item_id: number;
   quantity: number;
   unit: string;
-  inventory_item?: {
+  inventory_item: {
     id: number;
     name: string;
     quantity: number;
@@ -32,7 +32,22 @@ export async function getMenuItemIngredients(menuItemId: number): Promise<MenuIt
     .eq('menu_item_id', menuItemId);
 
   if (error) throw error;
-  return data || [];
+  
+  // Ensure the data matches the expected type
+  const typedData = data?.map(item => ({
+    menu_item_id: item.menu_item_id,
+    inventory_item_id: item.inventory_item_id,
+    quantity: item.quantity,
+    unit: item.unit,
+    inventory_item: {
+      id: item.inventory_item.id,
+      name: item.inventory_item.name,
+      quantity: item.inventory_item.quantity,
+      unit: item.inventory_item.unit
+    }
+  })) || [];
+
+  return typedData;
 }
 
 // Aggiorna gli ingredienti di un piatto
@@ -88,7 +103,7 @@ export async function checkMenuItemAvailability(menuItemId: number): Promise<Men
 
   if (error) throw error;
 
-  const ingredients = data as Array<{
+  const ingredients = (data || []) as Array<{
     ingredient_name: string;
     required_quantity: number;
     available_quantity: number;
@@ -138,7 +153,20 @@ export async function getMenuItemsByIngredient(ingredientId: number): Promise<Me
     .eq('inventory_item_id', ingredientId);
 
   if (error) throw error;
-  return data || [];
+
+  // Ensure the data matches the expected type
+  const typedData = data?.map(item => ({
+    quantity: item.quantity,
+    unit: item.unit,
+    menu_item: {
+      id: item.menu_item.id,
+      name: item.menu_item.name,
+      price: item.menu_item.price,
+      is_available: item.menu_item.is_available
+    }
+  })) || [];
+
+  return typedData;
 }
 
 // Aggiorna la disponibilità di tutti i piatti
@@ -184,7 +212,24 @@ export async function getLowStockIngredientsWithMenuItems(): Promise<LowStockIng
     .not('menu_item_ingredients', 'is', null);
 
   if (error) throw error;
-  return data || [];
+
+  // Ensure the data matches the expected type
+  const typedData = data?.map(item => ({
+    id: item.id,
+    name: item.name,
+    quantity: item.quantity,
+    unit: item.unit,
+    minimum_quantity: item.minimum_quantity,
+    menu_item_ingredients: (item.menu_item_ingredients || []).map((mi: any) => ({
+      menu_item: {
+        id: mi.menu_item.id,
+        name: mi.menu_item.name,
+        is_available: mi.menu_item.is_available
+      }
+    }))
+  })) || [];
+
+  return typedData;
 }
 
 // Sottoscrizione ai cambiamenti del magazzino che influenzano il menu
