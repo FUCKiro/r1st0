@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, X, Mail, User, Key } from 'lucide-react';
+import { Plus, Search, X, Mail, User, Key, Lock } from 'lucide-react';
 import { getWaiters, createWaiter, deleteWaiter, type Waiter } from '@/lib/waiters';
+import { changeUserPassword } from '@/lib/auth';
 
 export default function Waiters() {
   const [waiters, setWaiters] = useState<Waiter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [selectedWaiter, setSelectedWaiter] = useState<Waiter | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     email: '',
@@ -14,6 +17,9 @@ export default function Waiters() {
     password: '',
     confirmPassword: ''
   });
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
     loadWaiters();
@@ -72,6 +78,30 @@ export default function Waiters() {
       await loadWaiters();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore nell\'eliminazione del cameriere');
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedWaiter) return;
+
+    if (newPassword !== confirmNewPassword) {
+      setError('Le password non coincidono');
+      return;
+    }
+
+    try {
+      setIsChangingPassword(true);
+      await changeUserPassword(selectedWaiter.id, newPassword);
+      setIsPasswordModalOpen(false);
+      setSelectedWaiter(null);
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nel cambio password');
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -161,8 +191,21 @@ export default function Waiters() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
+                      onClick={() => {
+                        setSelectedWaiter(waiter);
+                        setNewPassword('');
+                        setConfirmNewPassword('');
+                        setIsPasswordModalOpen(true);
+                      }}
+                      className="text-blue-600 hover:text-blue-900 mr-2"
+                      title="Cambia password"
+                    >
+                      <Lock className="w-5 h-5" />
+                    </button>
+                    <button
                       onClick={() => handleDeleteWaiter(waiter.id)}
                       className="text-red-600 hover:text-red-900"
+                      title="Elimina cameriere"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -296,6 +339,92 @@ export default function Waiters() {
                   className="px-4 py-2 text-sm font-medium text-white bg-red-500 border border-transparent rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
                 >
                   {loading ? 'Creazione...' : 'Crea Cameriere'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Cambio Password */}
+      {isPasswordModalOpen && selectedWaiter && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Cambia Password - {selectedWaiter.full_name}
+              </h2>
+              <button
+                onClick={() => {
+                  setIsPasswordModalOpen(false);
+                  setSelectedWaiter(null);
+                  setNewPassword('');
+                  setConfirmNewPassword('');
+                }}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handlePasswordChange} className="p-6 space-y-4">
+              <div>
+                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+                  Nuova Password
+                </label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Key className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-gray-700">
+                  Conferma Nuova Password
+                </label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Key className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="password"
+                    id="confirmNewPassword"
+                    required
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPasswordModalOpen(false);
+                    setSelectedWaiter(null);
+                    setNewPassword('');
+                    setConfirmNewPassword('');
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 border border-transparent rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                >
+                  {isChangingPassword ? 'Cambio in corso...' : 'Cambia Password'}
                 </button>
               </div>
             </form>

@@ -62,6 +62,28 @@ export async function signOut() {
   if (error) throw error;
 }
 
+export async function changeUserPassword(userId: string, newPassword: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Non autorizzato');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.role !== 'admin') {
+    throw new Error('Solo gli amministratori possono cambiare le password');
+  }
+
+  const { error } = await supabase.auth.admin.updateUserById(
+    userId,
+    { password: newPassword }
+  );
+
+  if (error) throw error;
+}
+
 export async function getCurrentUser(): Promise<{
   id: string;
   email: string;
