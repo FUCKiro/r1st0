@@ -121,15 +121,16 @@ export default function Waiters() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+        <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
           Gestione Camerieri
         </h1>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all flex items-center gap-2 shadow-sm"
+          className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all flex items-center gap-1 md:gap-2 shadow-sm text-sm md:text-base"
         >
           <Plus className="w-5 h-5" />
-          Nuovo Cameriere
+          <span className="hidden sm:inline">Nuovo Cameriere</span>
+          <span className="sm:hidden">Nuovo</span>
         </button>
       </div>
 
@@ -153,7 +154,7 @@ export default function Waiters() {
       <div className="bg-white/50 backdrop-blur-sm rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50/50">
+            <thead className="bg-gray-50/50 hidden md:table-header-group">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Nome
@@ -161,7 +162,7 @@ export default function Waiters() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Email
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                   Data Registrazione
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -171,25 +172,52 @@ export default function Waiters() {
             </thead>
             <tbody className="bg-white/50 divide-y divide-gray-200">
               {filteredWaiters.map((waiter) => (
-                <tr key={waiter.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
+                <tr key={waiter.id} className="hover:bg-gray-50/50 transition-colors block md:table-row border-b md:border-b-0 last:border-b-0">
+                  <td className="px-4 py-3 md:px-6 md:py-4 whitespace-normal md:whitespace-nowrap block md:table-cell">
+                    <div className="flex items-center justify-between md:justify-start">
                       <User className="w-5 h-5 text-gray-400 mr-2" />
-                      <div className="text-sm font-medium text-gray-900">{waiter.full_name}</div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-900">{waiter.full_name}</div>
+                        <div className="text-xs text-gray-500 mt-0.5 md:hidden">{waiter.email}</div>
+                        <div className="text-xs text-gray-400 mt-0.5 md:hidden">
+                          {new Date(waiter.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 md:hidden">
+                        <button
+                          onClick={() => {
+                            setSelectedWaiter(waiter);
+                            setNewPassword('');
+                            setConfirmNewPassword('');
+                            setIsPasswordModalOpen(true);
+                          }}
+                          className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Cambia password"
+                        >
+                          <Lock className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteWaiter(waiter.id)}
+                          className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Elimina cameriere"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <Mail className="w-5 h-5 text-gray-400 mr-2" />
                       <div className="text-sm text-gray-900">{waiter.email}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
                       {new Date(waiter.created_at).toLocaleDateString()}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() => {
                         setSelectedWaiter(waiter);
@@ -219,7 +247,7 @@ export default function Waiters() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-auto">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-semibold text-gray-900">
                 Nuovo Cameriere
@@ -349,7 +377,7 @@ export default function Waiters() {
       {/* Modal Cambio Password */}
       {isPasswordModalOpen && selectedWaiter && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-auto">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-semibold text-gray-900">
                 Cambia Password - {selectedWaiter.full_name}
