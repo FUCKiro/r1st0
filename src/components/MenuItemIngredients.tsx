@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Plus, Minus, AlertTriangle } from 'lucide-react';
-import { getMenuItemIngredients, updateMenuItemIngredients, checkMenuItemAvailability } from '@/lib/menu-inventory';
-import { getInventoryItems } from '@/lib/inventory';
+import { 
+  getMenuItemIngredients, 
+  updateMenuItemIngredients, 
+  checkMenuItemAvailability,
+  type MenuItemIngredient,
+  type MenuItemAvailability
+} from '@/lib/menu-inventory';
+import { getInventoryItems, type InventoryItem } from '@/lib/inventory';
 import type { MenuItem } from '@/lib/menu';
-import type { InventoryItem } from '@/lib/inventory';
 
 interface Props {
   menuItem: MenuItem;
@@ -26,15 +31,7 @@ export default function MenuItemIngredients({ menuItem, onUpdate }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [availability, setAvailability] = useState<{
-    available: boolean;
-    missingIngredients: Array<{
-      name: string;
-      required: number;
-      available: number;
-      unit: string;
-    }>;
-  } | null>(null);
+  const [availability, setAvailability] = useState<MenuItemAvailability | null>(null);
 
   useEffect(() => {
     loadData();
@@ -52,7 +49,7 @@ export default function MenuItemIngredients({ menuItem, onUpdate }: Props) {
       if (menuIngredients.length > 0) {
         setIngredients(
           menuIngredients.map(ing => ({
-            inventory_item_id: ing.inventory_item.id.toString(),
+            inventory_item_id: ing.inventory_item_id.toString(),
             quantity: ing.quantity.toString(),
             unit: ing.unit
           }))
