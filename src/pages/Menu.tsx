@@ -494,7 +494,7 @@ export default function Menu() {
       {/* Modal Piatto */}
       {isItemModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[95vh] overflow-hidden flex flex-col">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-semibold text-gray-900">
                 {selectedItem ? 'Modifica Piatto' : 'Nuovo Piatto'}
@@ -525,8 +525,9 @@ export default function Menu() {
               </button>
             </div>
 
-            <form onSubmit={handleItemSubmit} className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={handleItemSubmit} className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -538,7 +539,7 @@ export default function Menu() {
                       required
                       value={itemFormData.name}
                       onChange={(e) => setItemFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
                     />
                   </div>
 
@@ -551,7 +552,7 @@ export default function Menu() {
                       rows={3}
                       value={itemFormData.description}
                       onChange={(e) => setItemFormData(prev => ({ ...prev, description: e.target.value }))}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
                     />
                   </div>
 
@@ -568,7 +569,7 @@ export default function Menu() {
                         required
                         value={itemFormData.price}
                         onChange={(e) => setItemFormData(prev => ({ ...prev, price: e.target.value }))}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
                       />
                     </div>
 
@@ -581,7 +582,7 @@ export default function Menu() {
                         required
                         value={itemFormData.category_id}
                         onChange={(e) => setItemFormData(prev => ({ ...prev, category_id: e.target.value }))}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
                       >
                         <option value="">Seleziona categoria</option>
                         {categories.map(category => (
@@ -603,7 +604,7 @@ export default function Menu() {
                       min="1"
                       value={itemFormData.preparation_time}
                       onChange={(e) => setItemFormData(prev => ({ ...prev, preparation_time: e.target.value }))}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
                     />
                   </div>
 
@@ -616,7 +617,7 @@ export default function Menu() {
                       id="image_url"
                       value={itemFormData.image_url}
                       onChange={(e) => setItemFormData(prev => ({ ...prev, image_url: e.target.value }))}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
                     />
                   </div>
                 </div>
@@ -634,7 +635,7 @@ export default function Menu() {
                         ...prev,
                         allergens: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
                       }))}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
                     />
                   </div>
 
@@ -650,7 +651,7 @@ export default function Menu() {
                         ...prev,
                         ingredients: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
                       }))}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
                     />
                   </div>
 
@@ -664,7 +665,7 @@ export default function Menu() {
                           key={level}
                           type="button"
                           onClick={() => setItemFormData(prev => ({ ...prev, spiciness_level: level }))}
-                          className={`px-3 py-1 rounded-md ${
+                          className={`px-2 py-1 rounded-md text-sm ${
                             itemFormData.spiciness_level === level
                               ? 'bg-red-100 text-red-700 border-red-200'
                               : 'bg-gray-100 text-gray-700 border-gray-200'
@@ -731,8 +732,9 @@ export default function Menu() {
                   </div>
                 </div>
               </div>
+              </div>
 
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex justify-end gap-3 p-4 border-t bg-white">
                 <button
                   type="button"
                   onClick={() => {

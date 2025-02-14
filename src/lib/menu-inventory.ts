@@ -83,32 +83,32 @@ export async function updateMenuItemIngredients(
 }
 
 export interface IngredientAvailability {
-  name: string;
-  required: number;
-  available: number;
+  ingredient_name: string;
+  required_quantity: number;
+  available_quantity: number;
   unit: string;
 }
 
 export interface MenuItemAvailability {
   available: boolean;
-  missingIngredients: IngredientAvailability[];
+  missingIngredients: {
+    name: string;
+    required: number;
+    available: number;
+    unit: string;
+  }[];
 }
 
 // Verifica la disponibilità di un piatto
 export async function checkMenuItemAvailability(menuItemId: number): Promise<MenuItemAvailability> {
-  const { data, error } = await supabase.rpc(
+  const { data, error } = await supabase.rpc<IngredientAvailability>(
     'check_ingredients_availability',
     { p_menu_item_id: menuItemId }
   );
 
   if (error) throw error;
 
-  const ingredients = (data || []) as Array<{
-    ingredient_name: string;
-    required_quantity: number;
-    available_quantity: number;
-    unit: string;
-  }>;
+  const ingredients = data || [];
 
   const missingIngredients = ingredients
     .filter(ing => ing.available_quantity < ing.required_quantity)
