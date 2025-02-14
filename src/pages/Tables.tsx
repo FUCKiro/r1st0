@@ -183,20 +183,19 @@ export default function Tables() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-          Gestione Tavoli
-        </h1>
-        <div className="flex gap-2">
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 bg-white/50 backdrop-blur-sm transition-colors"
+        <div className="flex items-center gap-4">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            Gestione Tavoli
+          </h1>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all flex items-center gap-2 shadow-sm"
           >
-            <option value="all">Tutti</option>
-            <option value="free">Liberi</option>
-            <option value="occupied">Occupati</option>
-            <option value="reserved">Prenotati</option>
-          </select>
+            <Plus className="w-5 h-5" />
+            Nuovo Tavolo
+          </button>
+        </div>
+        <div>
           <button
             onClick={() => setViewMode(prev => prev === 'list' ? 'map' : 'list')}
             className="px-4 py-2 rounded-lg text-sm font-medium bg-white shadow-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
@@ -228,6 +227,19 @@ export default function Tables() {
             {isMergeMode ? 'Annulla Unione' : 'Unisci Tavoli'}
           </button>
         </div>
+      </div>
+
+      <div className="mb-6">
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 bg-white/50 backdrop-blur-sm transition-colors"
+        >
+          <option value="all">Tutti i tavoli</option>
+          <option value="free">Tavoli liberi</option>
+          <option value="occupied">Tavoli occupati</option>
+          <option value="reserved">Tavoli prenotati</option>
+        </select>
       </div>
 
       {isMergeMode && selectedTablesToMerge.length > 0 && (
@@ -413,12 +425,6 @@ export default function Tables() {
       </div>
       )}
 
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-20 md:bottom-8 right-8 p-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full shadow-lg hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all hover:scale-110"
-      >
-        <Plus className="w-6 h-6" />
-      </button>
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

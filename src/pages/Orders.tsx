@@ -480,9 +480,9 @@ export default function Orders() {
                                 required
                                 value={item.menu_item_id}
                                 onChange={(e) => updateOrderItem(index, 'menu_item_id', e.target.value)}
-                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm [&_*]:text-left"
                               >
-                                <option value="">Seleziona piatto</option>
+                                <option value="" disabled>Seleziona piatto</option>
                                 {menuItems
                                   .filter(menuItem => menuItem.category_id === selectedCategoryId)
                                   .map(menuItem => (
@@ -607,9 +607,9 @@ export default function Orders() {
                             required
                             value={item.menu_item_id}
                             onChange={(e) => updateOrderItem(index, 'menu_item_id', e.target.value)}
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm [&_*]:text-left"
                           >
-                            <option value="">Seleziona piatto</option>
+                            <option value="" disabled>Seleziona piatto</option>
                             {menuItems
                               .filter(menuItem => menuItem.category_id === selectedCategoryId)
                               .map(menuItem => (
