@@ -3,7 +3,7 @@ import { supabase } from './supabase';
 export interface InventoryItem {
   id: number;
   name: string;
-  quantity: number | string;
+  quantity: number;
   unit: string;
   minimum_quantity: number;
   created_at: string;
@@ -13,7 +13,7 @@ export interface InventoryItem {
 export interface InventoryMovement {
   id: number;
   inventory_item_id: number;
-  quantity: number | string;
+  quantity: number;
   type: 'in' | 'out';
   notes?: string;
   created_by: string;
@@ -36,9 +36,16 @@ export async function createInventoryItem(data: {
   unit: string;
   minimum_quantity: number;
 }) {
+  // Ensure quantity is a number
+  const safeData = {
+    ...data,
+    quantity: Number(data.quantity),
+    minimum_quantity: Number(data.minimum_quantity)
+  };
+
   const { error } = await supabase
     .from('inventory_items')
-    .insert([data]);
+    .insert([safeData]);
     
   if (error) throw error;
 }
@@ -52,12 +59,17 @@ export async function updateInventoryItem(
     minimum_quantity: number;
   }
 ) {
+  // Ensure quantity is a number
+  const safeData = {
+    ...data,
+    quantity: Number(data.quantity),
+    minimum_quantity: Number(data.minimum_quantity),
+    updated_at: new Date().toISOString()
+  };
+
   const { error } = await supabase
     .from('inventory_items')
-    .update({
-      ...data,
-      updated_at: new Date().toISOString()
-    })
+    .update(safeData)
     .eq('id', id);
     
   if (error) throw error;
@@ -78,22 +90,28 @@ export async function addInventoryMovement(data: {
   type: 'in' | 'out';
   notes?: string;
 }) {
+  // Ensure quantity is a number
+  const safeData = {
+    ...data,
+    quantity: Number(data.quantity)
+  };
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Utente non autenticato');
 
   const { error: movementError } = await supabase
     .from('inventory_movements')
     .insert([{
-      ...data,
+      ...safeData,
       created_by: user.id
     }]);
 
   if (movementError) throw movementError;
 
   // Aggiorna la quantità nell'inventario
-  const delta = data.type === 'in' ? data.quantity : -data.quantity;
+  const delta = safeData.type === 'in' ? safeData.quantity : -safeData.quantity;
   const { error: updateError } = await supabase.rpc('update_inventory_quantity', {
-    p_item_id: data.inventory_item_id,
+    p_item_id: safeData.inventory_item_id,
     p_quantity_delta: delta
   });
 
