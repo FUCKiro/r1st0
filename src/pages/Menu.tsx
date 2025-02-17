@@ -494,7 +494,7 @@ export default function Menu() {
       {/* Modal Piatto */}
       {isItemModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[95vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full h-[95vh] md:h-auto md:max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-semibold text-gray-900">
                 {selectedItem ? 'Modifica Piatto' : 'Nuovo Piatto'}
@@ -525,10 +525,9 @@ export default function Menu() {
               </button>
             </div>
 
-            <form onSubmit={handleItemSubmit} className="flex flex-col flex-1 overflow-hidden">
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
+            <form onSubmit={handleItemSubmit} className="p-6">
+              <div className="flex flex-col gap-4 p-4 md:p-6 overflow-y-auto">
+                <div className="space-y-3 md:space-y-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                       Nome piatto
@@ -549,14 +548,14 @@ export default function Menu() {
                     </label>
                     <textarea
                       id="description"
-                      rows={3}
+                      rows={2}
                       value={itemFormData.description}
                       onChange={(e) => setItemFormData(prev => ({ ...prev, description: e.target.value }))}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label htmlFor="price" className="block text-sm font-medium text-gray-700">
                         Prezzo
@@ -622,7 +621,7 @@ export default function Menu() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-4">
                   <div>
                     <label htmlFor="allergens" className="block text-sm font-medium text-gray-700">
                       Allergeni (separati da virgola)
@@ -639,7 +638,7 @@ export default function Menu() {
                     />
                   </div>
 
-                  <div>
+                  <div className="mt-3">
                     <label htmlFor="ingredients" className="block text-sm font-medium text-gray-700">
                       Ingredienti (separati da virgola)
                     </label>
@@ -655,11 +654,11 @@ export default function Menu() {
                     />
                   </div>
 
-                  <div>
+                  <div className="mt-3">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Livello di piccantezza
                     </label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {[0, 1, 2, 3].map(level => (
                         <button
                           key={level}
@@ -677,7 +676,7 @@ export default function Menu() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="mt-3 grid grid-cols-2 gap-2">
                     <div className="flex items-center">
                       <input
                         type="checkbox"
@@ -732,9 +731,8 @@ export default function Menu() {
                   </div>
                 </div>
               </div>
-              </div>
 
-              <div className="flex justify-end gap-3 p-4 border-t bg-white">
+              <div className="flex justify-end gap-2 p-4 md:p-6 border-t bg-white">
                 <button
                   type="button"
                   onClick={() => {
@@ -756,13 +754,13 @@ export default function Menu() {
                       spiciness_level: 0
                     });
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                   Annulla
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 border border-transparent rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  className="px-3 py-1.5 text-sm font-medium text-white bg-red-500 border border-transparent rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                   {selectedItem ? 'Salva Modifiche' : 'Crea Piatto'}
                 </button>

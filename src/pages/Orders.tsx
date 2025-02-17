@@ -444,13 +444,13 @@ export default function Orders() {
                 </div>
 
                 <div className="w-full md:w-2/3 md:border-l border-gray-200 md:pl-4">
-                  <div className="flex flex-col gap-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="w-full md:w-48 border-b md:border-b-0 md:border-r border-gray-200 pb-4 md:pb-0 md:pr-4 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                       {categories.map(category => (
                         <button
                           key={category.id}
                           onClick={() => setSelectedCategoryId(category.id)}
-                          className={`text-center px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors ${
+                          className={`flex-shrink-0 text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap ${
                             selectedCategoryId === category.id
                               ? 'bg-red-50 text-red-700 font-medium'
                               : 'text-gray-700'
@@ -461,7 +461,7 @@ export default function Orders() {
                       ))}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto border-t border-gray-200 pt-4">
+                    <div className="flex-1 overflow-y-auto">
                       <div className="flex justify-end mb-4">
                         <button
                           type="button"
@@ -571,13 +571,13 @@ export default function Orders() {
             </div>
 
             <form onSubmit={handleAddToOrder} className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex-1 flex flex-col gap-4 p-6 overflow-y-auto">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+              <div className="flex-1 flex flex-col md:flex-row gap-4 p-6 overflow-y-auto">
+                <div className="flex flex-row md:flex-col md:w-48 overflow-x-auto md:overflow-y-auto md:border-r border-gray-200 md:pr-4">
                   {categories.map(category => (
                     <button
                       key={category.id}
                       onClick={() => setSelectedCategoryId(category.id)}
-                      className={`text-center px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors ${
+                      className={`flex-shrink-0 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap ${
                         selectedCategoryId === category.id
                           ? 'bg-red-50 text-red-700 font-medium'
                           : 'text-gray-700'
@@ -588,7 +588,7 @@ export default function Orders() {
                   ))}
                 </div>
 
-                <div className="flex-1 overflow-y-auto border-t border-gray-200 pt-4">
+                <div className="flex-1 overflow-y-auto min-h-0">
                   <div className="flex justify-end mb-4">
                     <button
                       type="button"
