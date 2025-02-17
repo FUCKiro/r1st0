@@ -3,7 +3,7 @@ import { supabase } from './supabase';
 export interface InventoryItem {
   id: number;
   name: string;
-  quantity: number;
+  quantity: number | string;
   unit: string;
   minimum_quantity: number;
   created_at: string;
@@ -13,7 +13,7 @@ export interface InventoryItem {
 export interface InventoryMovement {
   id: number;
   inventory_item_id: number;
-  quantity: number;
+  quantity: number | string;
   type: 'in' | 'out';
   notes?: string;
   created_by: string;

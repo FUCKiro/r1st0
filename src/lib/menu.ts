@@ -1,5 +1,15 @@
 import { supabase } from './supabase';
 
+export interface MenuItemIngredient {
+  id: number;
+  menu_item_id: number;
+  inventory_item_id: number;
+  quantity: number;
+  unit: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MenuCategory {
   id: number;
   name: string;
@@ -25,6 +35,7 @@ export interface MenuItem {
   is_vegan: boolean;
   is_gluten_free: boolean;
   spiciness_level: number;
+  ingredients_data?: MenuItemIngredient[];
   created_at: string;
   updated_at: string;
 }
