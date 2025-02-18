@@ -8,7 +8,6 @@ const Register = lazy(() => import('@/pages/Register'));
 const Tables = lazy(() => import('@/pages/Tables'));
 const Menu = lazy(() => import('@/pages/Menu'));
 const Orders = lazy(() => import('@/pages/Orders'));
-const Inventory = lazy(() => import('@/pages/Inventory'));
 const Waiters = lazy(() => import('@/pages/Waiters'));
 const Profile = lazy(() => import('@/pages/Profile'));
 
@@ -25,7 +24,6 @@ export default function App() {
             <Route path="tables" element={<Tables />} />
             <Route path="menu" element={<Menu />} />
             <Route path="orders" element={<Orders />} />
-            <Route path="inventory" element={<Inventory />} />
             <Route path="waiters" element={<Waiters />} />
             <Route path="profile" element={<Profile />} />
           </Route>

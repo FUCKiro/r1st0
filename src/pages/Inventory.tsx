@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Package, Plus, Search, ArrowDown, ArrowUp, X, AlertTriangle, Pencil, Trash2 } from 'lucide-react';
-import { getInventoryItems, createInventoryItem, updateInventoryItem, deleteInventoryItem, addInventoryMovement, type InventoryItem } from '@/lib/inventory';
+import { Package, Plus, Search, AlertTriangle, Pencil, Trash2 } from 'lucide-react';
+import { getInventoryItems, createInventoryItem, updateInventoryItem, deleteInventoryItem, type InventoryItem } from '@/lib/inventory';
 
 export default function Inventory() {
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -9,10 +9,6 @@ export default function Inventory() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
-  const [isMovementModalOpen, setIsMovementModalOpen] = useState(false);
-  const [movementType, setMovementType] = useState<'in' | 'out'>('in');
-  const [movementQuantity, setMovementQuantity] = useState('');
-  const [movementNotes, setMovementNotes] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     quantity: '',
@@ -70,27 +66,6 @@ export default function Inventory() {
       await loadItems();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore nell\'eliminazione');
-    }
-  };
-
-  const handleMovement = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedItem) return;
-
-    try {
-      await addInventoryMovement({
-        inventory_item_id: selectedItem.id,
-        quantity: parseFloat(movementQuantity),
-        type: movementType,
-        notes: movementNotes || undefined
-      });
-      setIsMovementModalOpen(false);
-      setSelectedItem(null);
-      setMovementQuantity('');
-      setMovementNotes('');
-      await loadItems();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore nel movimento');
     }
   };
 
@@ -181,32 +156,6 @@ export default function Inventory() {
                   <button
                     onClick={() => {
                       setSelectedItem(item);
-                      setMovementType('in');
-                      setMovementQuantity('');
-                      setMovementNotes('');
-                      setIsMovementModalOpen(true);
-                    }}
-                    className="flex-1 sm:flex-none px-3 py-1.5 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-                  >
-                    <ArrowDown className="w-4 h-4 sm:inline-block hidden" />
-                    <span className="sm:hidden">Carico</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedItem(item);
-                      setMovementType('out');
-                      setMovementQuantity('');
-                      setMovementNotes('');
-                      setIsMovementModalOpen(true);
-                    }}
-                    className="flex-1 sm:flex-none px-3 py-1.5 text-sm bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
-                  >
-                    <ArrowUp className="w-4 h-4 sm:inline-block hidden" />
-                    <span className="sm:hidden">Scarico</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedItem(item);
                       setFormData({
                         name: item.name,
                         quantity: item.quantity.toString(),
@@ -249,7 +198,7 @@ export default function Inventory() {
                 }}
                 className="text-gray-400 hover:text-gray-500"
               >
-                <X className="w-6 h-6" />
+                <Trash2 className="w-6 h-6" />
               </button>
             </div>
 
@@ -331,95 +280,6 @@ export default function Inventory() {
                   className="px-4 py-2 text-sm font-medium text-white bg-red-500 border border-transparent rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                   {selectedItem ? 'Salva Modifiche' : 'Crea Articolo'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {isMovementModalOpen && selectedItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {movementType === 'in' ? 'Carico Merce' : 'Scarico Merce'}
-              </h2>
-              <button
-                onClick={() => {
-                  setIsMovementModalOpen(false);
-                  setSelectedItem(null);
-                  setMovementQuantity('');
-                  setMovementNotes('');
-                }}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <form onSubmit={handleMovement} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Articolo
-                </label>
-                <div className="mt-1 p-2 bg-gray-50 rounded-md">
-                  {selectedItem.name}
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
-                  Quantità
-                </label>
-                <input
-                  type="number"
-                  id="quantity"
-                  step="0.01"
-                  min="0.01"
-                  required
-                  value={movementQuantity}
-                  onChange={(e) => setMovementQuantity(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-                  Note
-                </label>
-                <textarea
-                  id="notes"
-                  rows={3}
-                  value={movementNotes}
-                  onChange={(e) => setMovementNotes(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                  placeholder="Aggiungi note opzionali..."
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMovementModalOpen(false);
-                    setSelectedItem(null);
-                    setMovementQuantity('');
-                    setMovementNotes('');
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                >
-                  Annulla
-                </button>
-                <button
-                  type="submit"
-                  className={`px-4 py-2 text-sm font-medium text-white border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                    movementType === 'in'
-                      ? 'bg-blue-500 hover:bg-blue-600 focus:ring-blue-500'
-                      : 'bg-orange-500 hover:bg-orange-600 focus:ring-orange-500'
-                  }`}
-                >
-                  {movementType === 'in' ? 'Carica' : 'Scarica'}
                 </button>
               </div>
             </form>

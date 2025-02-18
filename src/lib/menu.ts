@@ -86,7 +86,20 @@ export async function getMenuItems(categoryId?: number) {
 export async function createMenuItem(data: Omit<MenuItem, 'id' | 'created_at' | 'updated_at'>) {
   const { error } = await supabase
     .from('menu_items')
-    .insert([data]);
+    .insert([{
+      name: data.name,
+      description: data.description || undefined,
+      price: data.price,
+      category_id: data.category_id,
+      is_available: data.is_available,
+      preparation_time: data.preparation_time || undefined,
+      allergens: data.allergens,
+      image_url: data.image_url || undefined,
+      is_vegetarian: data.is_vegetarian,
+      is_vegan: data.is_vegan,
+      is_gluten_free: data.is_gluten_free,
+      spiciness_level: data.spiciness_level
+    }]);
     
   if (error) throw error;
 }

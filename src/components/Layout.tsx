@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { ListRestart as Restaurant, Receipt, Package, User, ChefHat, LogOut, Users } from 'lucide-react';
+import { ListRestart as Restaurant, Receipt, User, ChefHat, LogOut, Users } from 'lucide-react';
 import { signOut } from '@/lib/auth';
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -119,20 +119,6 @@ export default function Layout() {
             <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Ordini</span>
           </NavLink>
           
-          {hasPermission(['admin', 'manager']) && (
-            <NavLink
-              to="/inventory"
-              className={({ isActive }) =>
-                `flex flex-col md:flex-row items-center justify-center p-1 md:p-4 hover:text-red-500 ${
-                  isActive ? 'text-red-500' : 'text-gray-600'
-                }`
-              }
-            >
-              <Package className="w-5 h-5 md:w-6 md:h-6" />
-              <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Magazzino</span>
-            </NavLink>
-          )}
-
           {hasPermission(['admin']) && (
             <NavLink
               to="/waiters"
