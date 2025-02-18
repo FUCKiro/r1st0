@@ -162,15 +162,15 @@ export default function MenuItemModal({
             <div className="border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-4">
               <div>
                 <label htmlFor="allergens" className="block text-sm font-medium text-gray-700">
-                  Allergeni (separati da virgola)
+                  Allergeni (separati da punto e virgola)
                 </label>
-                <input
-                  type="text"
+                <textarea
                   id="allergens"
-                  value={formData.allergens.join(', ')}
+                  rows={2}
+                  value={formData.allergens.join('; ')}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    allergens: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                    allergens: e.target.value.split(';').map(s => s.trim()).filter(Boolean)
                   }))}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
                 />

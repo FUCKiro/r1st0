@@ -9,6 +9,7 @@
     "allowImportingTsExtensions": true,
     "allowJs": true,
     "allowJs": true,
+    "allowJs": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
