@@ -56,6 +56,35 @@ export async function createOrder(data: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
+  // Ottieni il tavolo
+  const { data: table } = await supabase
+    .from('tables')
+    .select('*')
+    .eq('id', data.table_id)
+    .single();
+
+  if (!table) throw new Error('Tavolo non trovato');
+
+  // Se il tavolo è unito ad altri, crea un ordine principale
+  let mainOrderId = null;
+  if (table.merged_with && table.merged_with.length > 0) {
+    // Crea l'ordine principale
+    const { data: mainOrder, error: mainOrderError } = await supabase
+      .from('orders')
+      .insert([{
+        table_id: data.table_id,
+        waiter_id: user.id,
+        status: 'pending',
+        notes: 'Ordine principale per tavoli uniti: ' + [table.number, ...table.merged_with].join(', '),
+        total_amount: 0
+      }])
+      .select()
+      .single();
+
+    if (mainOrderError) throw mainOrderError;
+    mainOrderId = mainOrder.id;
+  }
+
   // Inizia la transazione
   const { data: order, error: orderError } = await supabase
     .from('orders')
@@ -64,7 +93,8 @@ export async function createOrder(data: {
       waiter_id: user.id,
       status: 'pending',
       notes: data.notes,
-      total_amount: 0 // Verrà calcolato dopo
+      total_amount: 0,
+      merged_order_id: mainOrderId
     }])
     .select()
     .single();

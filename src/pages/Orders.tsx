@@ -187,7 +187,9 @@ export default function Orders() {
         item.menu_item?.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     const matchesFilter = filter === 'all' || order.status === filter;
-    return matchesSearch && matchesFilter;
+    // Non mostrare gli ordini secondari dei tavoli uniti
+    const isNotSecondaryOrder = !order.merged_order_id;
+    return matchesSearch && matchesFilter && isNotSecondaryOrder;
   });
 
   const getStatusColor = (status: Order['status']) => {
@@ -281,6 +283,14 @@ export default function Orders() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
                     Tavolo {order.table?.number}
+                    {order.table?.merged_with && order.table.merged_with.length > 0 && (
+                      <span className="ml-2 text-sm text-blue-600">
+                        (Unito con {order.table.merged_with.map(id => {
+                          const mergedTable = tables.find(t => t.id === id);
+                          return mergedTable ? mergedTable.number : id;
+                        }).join(', ')})
+                      </span>
+                    )}
                   </h3>
                   <p className="text-sm text-gray-500">
                     Ordine #{order.id}

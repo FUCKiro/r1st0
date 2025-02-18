@@ -176,7 +176,17 @@ export default function TableMap({ tables, onTableClick, onTableMove }: Props) {
             }`}
           >
             <div className="flex justify-between items-center mb-1">
-              <h3 className="font-semibold text-gray-800 text-xs sm:text-sm">Tavolo {table.number}</h3>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-800 text-xs sm:text-sm">Tavolo {table.number}</h3>
+                {table.merged_with && table.merged_with.length > 0 && (
+                  <div className="text-[10px] sm:text-xs text-blue-600 font-medium">
+                    Unito con {table.merged_with.map(id => {
+                      const mergedTable = tables.find(t => t.id === id);
+                      return mergedTable ? mergedTable.number : id;
+                    }).join(', ')}
+                  </div>
+                )}
+              </div>
               <span
                 className={`px-1 py-0.5 rounded-full text-[10px] sm:text-xs ${
                   table.status === 'occupied' ? 'bg-red-100/80 text-red-800 backdrop-blur-sm' :
