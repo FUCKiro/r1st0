@@ -19,7 +19,6 @@ export interface MenuItem {
   is_available: boolean;
   preparation_time?: string;
   allergens: string[];
-  ingredients: string[];
   image_url?: string;
   is_vegetarian: boolean;
   is_vegan: boolean;
