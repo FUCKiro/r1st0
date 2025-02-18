@@ -21,6 +21,7 @@ export interface Order {
   status: 'pending' | 'preparing' | 'ready' | 'served' | 'paid' | 'cancelled';
   total_amount: number;
   notes?: string;
+  merged_order_id?: number;
   created_at: string;
   updated_at: string;
   table?: Table;
