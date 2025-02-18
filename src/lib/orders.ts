@@ -5,7 +5,7 @@ import type { MenuItem } from './menu';
 export interface OrderItem {
   id: number;
   order_id: number;
-  product_id: number;
+  menu_item_id: number;
   quantity: number;
   notes?: string;
   status: 'pending' | 'preparing' | 'ready' | 'served' | 'cancelled';
@@ -19,6 +19,7 @@ export interface Order {
   table_id: number;
   waiter_id: string;
   status: 'pending' | 'preparing' | 'ready' | 'served' | 'paid' | 'cancelled';
+  merged_order_id?: number;
   total_amount: number;
   notes?: string;
   merged_order_id?: number;
