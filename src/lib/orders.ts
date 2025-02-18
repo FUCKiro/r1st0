@@ -19,7 +19,6 @@ export interface Order {
   table_id: number;
   waiter_id: string;
   status: 'pending' | 'preparing' | 'ready' | 'served' | 'paid' | 'cancelled';
-  merged_order_id?: number;
   total_amount: number;
   notes?: string;
   merged_order_id?: number;
