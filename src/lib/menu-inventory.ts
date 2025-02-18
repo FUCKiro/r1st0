@@ -18,6 +18,13 @@ export interface MenuItemIngredientWithDetails extends MenuItemIngredient {
   };
 }
 
+export interface IngredientAvailability {
+  ingredient_name: string;
+  required_quantity: number;
+  available_quantity: number;
+  unit: string;
+}
+
 export async function getMenuItemIngredients(menuItemId: number): Promise<MenuItemIngredientWithDetails[]> {
   const { data, error } = await supabase
     .from('menu_item_ingredients')
@@ -81,13 +88,13 @@ export async function checkIngredientAvailability(menuItemId: number): Promise<{
   }>;
 }> {
   const { data, error } = await supabase
-    .rpc('check_ingredients_availability', {
+    .rpc<IngredientAvailability>('check_ingredients_availability', {
       p_menu_item_id: menuItemId
     });
 
   if (error) throw error;
 
-  const missingIngredients = data
+  const missingIngredients = (data || [])
     .filter(ing => ing.available_quantity < ing.required_quantity)
     .map(ing => ({
       name: ing.ingredient_name,

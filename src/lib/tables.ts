@@ -9,7 +9,6 @@ export interface Table {
   location?: string;
   last_occupied_at?: string;
   merged_with?: number[];
-  merged_with?: number[];
   x_position: number | null;
   y_position: number | null;
   created_at: string;
