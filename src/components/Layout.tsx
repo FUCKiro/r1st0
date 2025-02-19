@@ -1,166 +1,289 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { ListRestart as Restaurant, Receipt, User, ChefHat, LogOut, Users } from 'lucide-react';
-import { signOut } from '@/lib/auth';
-import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect } from 'react';
+import { getOrders, createOrder, addToOrder, updateOrderStatus, updateOrderItemStatus, deleteOrder, useOrdersSubscription, type Order } from '@/lib/orders';
+import { getTables, type Table } from '@/lib/tables';
+import { getMenuItems, getMenuCategories, type MenuItem, type MenuCategory } from '@/lib/menu';
+import OrderHeader from '@/components/orders/OrderHeader';
+import OrderSearch from '@/components/orders/OrderSearch';
+import OrderList from '@/components/orders/OrderList';
+import OrderModal from '@/components/orders/OrderModal';
 
-interface Profile {
-  role: string;
-  email: string;
-  full_name: string;
-}
+export default function Orders() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddToOrderModalOpen, setIsAddToOrderModalOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState<Order['status'] | 'all'>('all');
+  const [tables, setTables] = useState<Table[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [newOrder, setNewOrder] = useState({
+    table_id: '',
+    notes: '',
+    items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+  });
 
-export default function Layout() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const navigate = useNavigate();
-
-  const loadProfile = useCallback(async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!user || !session) {
-        navigate('/login');
-        return;
-      }
-
-      // Ottieni il ruolo dalla sessione
-      const sessionRole = session.user.user_metadata?.role;
-
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // Ignora errore "non trovato"
-        throw error;
-      }
-
-      // Se il profilo esiste, usalo
-      if (profile) {
-        setProfile(profile);
-      } else {
-        // Se il profilo non esiste, crealo con il ruolo dalla sessione
-        const { data: newProfile, error: createError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: user.id,
-            email: user.email,
-            role: sessionRole || 'waiter',
-            updated_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-
-        if (createError) throw createError;
-        setProfile(newProfile);
-      }
-    } catch (error) {
-      console.error('Error loading profile:', error);
-      navigate('/login');
-    }
-  }, [navigate]);
+  // Load initial data
   useEffect(() => {
-    loadProfile();
-  }, [loadProfile]);
+    const loadInitialData = async () => {
+      try {
+        const [ordersData, tablesData, itemsData, categoriesData] = await Promise.all([
+          getOrders(),
+          getTables(),
+          getMenuItems(),
+          getMenuCategories()
+        ]);
+        
+        setOrders(ordersData);
+        setTables(tablesData);
+        setMenuItems(itemsData);
+        setCategories(categoriesData);
+        
+        if (categoriesData.length > 0) {
+          setSelectedCategoryId(categoriesData[0].id);
+        }
+        
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Errore nel caricamento dei dati');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Funzione per verificare i permessi
-  const hasPermission = useCallback((allowedRoles: string[]) => {
-    return profile && allowedRoles.includes(profile.role);
-  }, [profile]);
+    loadInitialData();
+  }, []);
 
-  const handleSignOut = async () => {
+  // Set up real-time subscription
+  useEffect(() => {
+    useOrdersSubscription(async () => {
+      const data = await getOrders();
+      setOrders(data);
+    });
+  }, []);
+
+  const handleCreateOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      await signOut();
-      navigate('/login');
-    } catch (error) {
-      console.error('Error signing out:', error);
+      await createOrder({
+        table_id: parseInt(newOrder.table_id),
+        notes: newOrder.notes || undefined,
+        items: newOrder.items
+          .filter(item => item.menu_item_id && item.quantity > 0)
+          .map(item => ({
+            menu_item_id: parseInt(item.menu_item_id),
+            quantity: item.quantity,
+            notes: item.notes || undefined
+          }))
+      });
+      setIsModalOpen(false);
+      setNewOrder({
+        table_id: '',
+        notes: '',
+        items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+      });
+      const data = await getOrders();
+      setOrders(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nella creazione dell\'ordine');
     }
   };
 
-  return (
-    <div className="flex h-screen bg-gray-100 relative">
-      <nav className="fixed bottom-0 w-full bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-lg md:shadow-none md:relative md:w-64 md:border-r md:border-t-0 z-50">
-        <div className="grid grid-cols-5 md:grid-cols-1 md:h-full md:p-4 py-1 md:py-4">
-          <NavLink
-            to="/tables"
-            className={({ isActive }) =>
-              `flex flex-col md:flex-row items-center justify-center p-1 md:p-4 hover:text-red-500 ${
-                isActive ? 'text-red-500' : 'text-gray-600'
-              }`
-            }
-          >
-            <Restaurant className="w-5 h-5 md:w-6 md:h-6" />
-            <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Tavoli</span>
-          </NavLink>
-          
-          <NavLink
-            to="/menu"
-            className={({ isActive }) =>
-              `flex flex-col md:flex-row items-center justify-center p-1 md:p-4 hover:text-red-500 ${
-                isActive ? 'text-red-500' : 'text-gray-600'
-              }`
-            }
-          >
-            <ChefHat className="w-5 h-5 md:w-6 md:h-6" />
-            <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Menu</span>
-          </NavLink>
-          
-          <NavLink
-            to="/orders"
-            className={({ isActive }) =>
-              `flex flex-col md:flex-row items-center justify-center p-1 md:p-4 hover:text-red-500 ${
-                isActive ? 'text-red-500' : 'text-gray-600'
-              }`
-            }
-          >
-            <Receipt className="w-5 h-5 md:w-6 md:h-6" />
-            <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Ordini</span>
-          </NavLink>
-          
-          {hasPermission(['admin']) && (
-            <NavLink
-              to="/waiters"
-              className={({ isActive }) =>
-                `flex flex-col md:flex-row items-center justify-center p-1 md:p-4 hover:text-red-500 ${
-                  isActive ? 'text-red-500' : 'text-gray-600'
-                }`
-              }
-            >
-              <Users className="w-5 h-5 md:w-6 md:h-6" />
-              <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Camerieri</span>
-            </NavLink>
-          )}
-          
-          {hasPermission(['admin', 'manager']) && (
-            <NavLink
-              to="/profile"
-              className={({ isActive }) =>
-                `flex flex-col md:flex-row items-center justify-center p-1 md:p-4 hover:text-red-500 ${
-                  isActive ? 'text-red-500' : 'text-gray-600'
-                }`
-              }
-            >
-              <User className="w-5 h-5 md:w-6 md:h-6" />
-              <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Profilo</span>
-            </NavLink>
-          )}
+  const handleAddToOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedOrderId) return;
 
-          {/* Il pulsante di logout è sempre visibile */}
-          <button
-            onClick={handleSignOut}
-            className="flex flex-col md:flex-row items-center justify-center p-1 md:p-4 text-gray-600 hover:text-red-500"
-          >
-            <LogOut className="w-5 h-5 md:w-6 md:h-6" />
-            <span className="text-[10px] mt-0.5 md:text-base md:mt-0 md:ml-2">Esci</span>
-          </button>
+    try {
+      await addToOrder(
+        selectedOrderId,
+        newOrder.items
+          .filter(item => item.menu_item_id && item.quantity > 0)
+          .map(item => ({
+            menu_item_id: parseInt(item.menu_item_id),
+            quantity: item.quantity,
+            notes: item.notes || undefined
+          }))
+      );
+      setIsAddToOrderModalOpen(false);
+      setSelectedOrderId(null);
+      setNewOrder({
+        table_id: '',
+        notes: '',
+        items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+      });
+      const data = await getOrders();
+      setOrders(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nell\'aggiunta di piatti all\'ordine');
+    }
+  };
+
+  const handleUpdateOrderStatus = async (orderId: number, status: Order['status']) => {
+    try {
+      await updateOrderStatus(orderId, status);
+      const data = await getOrders();
+      setOrders(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nell\'aggiornamento dell\'ordine');
+    }
+  };
+
+  const handleUpdateOrderItemStatus = async (itemId: number, status: 'pending' | 'preparing' | 'ready' | 'served' | 'cancelled') => {
+    try {
+      await updateOrderItemStatus(itemId, status);
+      const data = await getOrders();
+      setOrders(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nell\'aggiornamento dell\'elemento');
+    }
+  };
+
+  const handleDeleteOrder = async (id: number) => {
+    if (!confirm('Sei sicuro di voler eliminare questo ordine?')) return;
+    try {
+      await deleteOrder(id);
+      const data = await getOrders();
+      setOrders(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nell\'eliminazione dell\'ordine');
+    }
+  };
+
+  const addOrderItem = () => {
+    setNewOrder(prev => ({
+      ...prev,
+      items: [...prev.items, { menu_item_id: '', quantity: 1, notes: '' }]
+    }));
+  };
+
+  const removeOrderItem = (index: number) => {
+    setNewOrder(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateOrderItem = (index: number, field: string, value: string | number) => {
+    setNewOrder(prev => ({
+      ...prev,
+      items: prev.items.map((item, i) => 
+        i === index ? { ...item, [field]: value } : item
+      )
+    }));
+  };
+
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = 
+      order.table?.number.toString().includes(searchQuery) ||
+      order.notes?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.items?.some(item => 
+        item.menu_item?.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    const matchesFilter = filter === 'all' || order.status === filter;
+    return matchesSearch && matchesFilter;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-gray-600">Caricamento ordini...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <OrderHeader
+        onNewOrder={() => setIsModalOpen(true)}
+        filter={filter}
+        onFilterChange={setFilter}
+      />
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+          {error}
         </div>
-      </nav>
-      
-      <main className="flex-1 p-4 md:p-8 pb-32 md:pb-8 overflow-auto">
-        <Outlet />
-      </main>
+      )}
+
+      <div className="mt-6">
+        <OrderSearch value={searchQuery} onChange={setSearchQuery} />
+      </div>
+
+      <div className="mt-6">
+        <OrderList
+          orders={filteredOrders}
+          tables={tables}
+          onUpdateOrderStatus={handleUpdateOrderStatus}
+          onUpdateOrderItemStatus={handleUpdateOrderItemStatus}
+          onAddItems={(orderId) => {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            setSelectedOrderId(orderId);
+            setNewOrder({
+              table_id: order.table_id.toString(),
+              notes: '',
+              items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+            });
+            setIsAddToOrderModalOpen(true);
+          }}
+          onDelete={handleDeleteOrder}
+        />
+      </div>
+
+      <OrderModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setNewOrder({
+            table_id: '',
+            notes: '',
+            items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+          });
+        }}
+        onSubmit={handleCreateOrder}
+        tables={tables}
+        categories={categories}
+        menuItems={menuItems}
+        selectedCategoryId={selectedCategoryId}
+        onSelectCategory={setSelectedCategoryId}
+        formData={newOrder}
+        onUpdateFormData={setNewOrder}
+        onAddItem={addOrderItem}
+        onRemoveItem={removeOrderItem}
+        onUpdateItem={updateOrderItem}
+        title="Nuovo Ordine"
+        submitText="Crea Ordine"
+      />
+
+      <OrderModal
+        isOpen={isAddToOrderModalOpen && selectedOrderId !== null}
+        onClose={() => {
+          setIsAddToOrderModalOpen(false);
+          setSelectedOrderId(null);
+          setNewOrder({
+            table_id: '',
+            notes: '',
+            items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+          });
+        }}
+        onSubmit={handleAddToOrder}
+        tables={tables}
+        categories={categories}
+        menuItems={menuItems}
+        selectedCategoryId={selectedCategoryId}
+        onSelectCategory={setSelectedCategoryId}
+        formData={newOrder}
+        onUpdateFormData={setNewOrder}
+        onAddItem={addOrderItem}
+        onRemoveItem={removeOrderItem}
+        onUpdateItem={updateOrderItem}
+        title={`Aggiungi piatti all'ordine #${selectedOrderId}`}
+        submitText="Aggiungi all'ordine"
+      />
     </div>
   );
 }
