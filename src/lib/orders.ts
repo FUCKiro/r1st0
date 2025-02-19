@@ -21,7 +21,6 @@ export interface Order {
   status: 'pending' | 'preparing' | 'ready' | 'served' | 'paid' | 'cancelled';
   total_amount: number;
   notes?: string;
-  merged_order_id?: number;
   created_at: string;
   updated_at: string;
   table?: Table;
@@ -57,36 +56,7 @@ export async function createOrder(data: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
-  // Ottieni il tavolo
-  const { data: table } = await supabase
-    .from('tables')
-    .select('*')
-    .eq('id', data.table_id)
-    .single();
-
-  if (!table) throw new Error('Tavolo non trovato');
-
-  // Se il tavolo è unito ad altri, crea un ordine principale
-  let mainOrderId = null;
-  if (table.merged_with && table.merged_with.length > 0) {
-    // Crea l'ordine principale
-    const { data: mainOrder, error: mainOrderError } = await supabase
-      .from('orders')
-      .insert([{
-        table_id: data.table_id,
-        waiter_id: user.id,
-        status: 'pending',
-        notes: 'Ordine principale per tavoli uniti: ' + [table.number, ...table.merged_with].join(', '),
-        total_amount: 0
-      }])
-      .select()
-      .single();
-
-    if (mainOrderError) throw mainOrderError;
-    mainOrderId = mainOrder.id;
-  }
-
-  // Inizia la transazione
+  // Create the order
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert([{
@@ -94,15 +64,14 @@ export async function createOrder(data: {
       waiter_id: user.id,
       status: 'pending',
       notes: data.notes,
-      total_amount: 0,
-      merged_order_id: mainOrderId
+      total_amount: 0
     }])
     .select()
     .single();
 
   if (orderError) throw orderError;
 
-  // Inserisce gli elementi dell'ordine
+  // Insert order items
   const { error: itemsError } = await supabase
     .from('order_items')
     .insert(

@@ -4,7 +4,7 @@ import { getTables, type Table } from '@/lib/tables';
 import { getMenuItems, getMenuCategories, type MenuItem, type MenuCategory } from '@/lib/menu';
 import OrderHeader from '@/components/orders/OrderHeader';
 import OrderSearch from '@/components/orders/OrderSearch';
-import OrderCard from '@/components/orders/OrderCard';
+import OrderList from '@/components/orders/OrderList';
 import OrderModal from '@/components/orders/OrderModal';
 
 export default function Orders() {
@@ -183,9 +183,7 @@ export default function Orders() {
         item.menu_item?.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     const matchesFilter = filter === 'all' || order.status === filter;
-    // Don't show secondary orders from merged tables
-    const isNotSecondaryOrder = !order.merged_order_id;
-    return matchesSearch && matchesFilter && isNotSecondaryOrder;
+    return matchesSearch && matchesFilter;
   });
 
   if (loading) {
@@ -214,26 +212,26 @@ export default function Orders() {
         <OrderSearch value={searchQuery} onChange={setSearchQuery} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-        {filteredOrders.map((order) => (
-          <OrderCard
-            key={order.id}
-            order={order}
-            tables={tables}
-            onUpdateOrderStatus={handleUpdateOrderStatus}
-            onUpdateOrderItemStatus={handleUpdateOrderItemStatus}
-            onAddItems={(orderId) => {
-              setSelectedOrderId(orderId);
-              setNewOrder({
-                table_id: order.table_id.toString(),
-                notes: '',
-                items: [{ menu_item_id: '', quantity: 1, notes: '' }]
-              });
-              setIsAddToOrderModalOpen(true);
-            }}
-            onDelete={handleDeleteOrder}
-          />
-        ))}
+      <div className="mt-6">
+        <OrderList
+          orders={filteredOrders}
+          tables={tables}
+          onUpdateOrderStatus={handleUpdateOrderStatus}
+          onUpdateOrderItemStatus={handleUpdateOrderItemStatus}
+          onAddItems={(orderId) => {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            setSelectedOrderId(orderId);
+            setNewOrder({
+              table_id: order.table_id.toString(),
+              notes: '',
+              items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+            });
+            setIsAddToOrderModalOpen(true);
+          }}
+          onDelete={handleDeleteOrder}
+        />
       </div>
 
       <OrderModal
