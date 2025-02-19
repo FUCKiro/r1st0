@@ -1,8 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Users, X, MoreVertical, Pencil, Trash2, StickyNote, Link2, Unlink, Map, Calendar } from 'lucide-react';
 import { getTables, updateTableStatus, createTable, updateTable, deleteTable, updateTableNotes, mergeTables, unmergeTable, useTableSubscription, updateTablePosition, type Table } from '@/lib/tables';
 import TableMap from '@/components/TableMap';
 import ReservationModal from '@/components/ReservationModal';
+import TableHeader from '@/components/tables/TableHeader';
+import TableFilter from '@/components/tables/TableFilter';
+import TableMergeAlert from '@/components/tables/TableMergeAlert';
+import TableList from '@/components/tables/TableList';
+import TableModal from '@/components/tables/TableModal';
+import TableNotesModal from '@/components/tables/TableNotesModal';
 
 export default function Tables() {
   const [filter, setFilter] = useState('all');
@@ -172,98 +177,34 @@ export default function Tables() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-        {error}
-      </div>
-    );
-  }
-
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-            Gestione Tavoli
-          </h1>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all flex items-center gap-2 shadow-sm"
-          >
-            <Plus className="w-5 h-5" />
-            Nuovo Tavolo
-          </button>
-        </div>
-        <div>
-          <button
-            onClick={() => setViewMode(prev => prev === 'list' ? 'map' : 'list')}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-white shadow-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            {viewMode === 'list' ? (
-              <>
-                <Map className="w-4 h-4 inline-block mr-2" />
-                Mappa
-              </>
-            ) : (
-              <>
-                <Users className="w-4 h-4 inline-block mr-2" />
-                Lista
-              </>
-            )}
-          </button>
-          <button
-            onClick={() => {
-              setIsMergeMode(!isMergeMode);
-              setSelectedTablesToMerge([]);
-            }}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              isMergeMode
-                ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            <Link2 className="w-4 h-4 inline-block mr-2" />
-            {isMergeMode ? 'Annulla Unione' : 'Unisci Tavoli'}
-          </button>
-        </div>
-      </div>
+      <TableHeader
+        onNewTable={() => setIsModalOpen(true)}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        isMergeMode={isMergeMode}
+        onMergeModeChange={setIsMergeMode}
+        selectedTablesCount={selectedTablesToMerge.length}
+        onMergeTables={handleMergeTables}
+      />
 
-      <div className="mb-6">
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 bg-white/50 backdrop-blur-sm transition-colors"
-        >
-          <option value="all">Tutti i tavoli</option>
-          <option value="free">Tavoli liberi</option>
-          <option value="occupied">Tavoli occupati</option>
-          <option value="reserved">Tavoli prenotati</option>
-        </select>
-      </div>
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      <TableFilter
+        filter={filter}
+        onFilterChange={setFilter}
+      />
 
       {isMergeMode && selectedTablesToMerge.length > 0 && (
-        <div className="mb-4 p-4 bg-gradient-to-r from-red-50 to-red-100/50 border border-red-200 rounded-lg shadow-sm backdrop-blur-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-red-700 font-medium">
-                Tavoli selezionati: {selectedTablesToMerge.length}
-              </p>
-              <p className="text-sm text-red-600">
-                {selectedTablesToMerge.length === 1
-                  ? 'Seleziona almeno un altro tavolo da unire'
-                  : 'Clicca "Unisci" per completare l\'operazione'}
-              </p>
-            </div>
-            <button
-              onClick={handleMergeTables}
-              disabled={selectedTablesToMerge.length < 2}
-              className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 disabled:opacity-50 transition-colors shadow-sm"
-            >
-              Unisci
-            </button>
-          </div>
-        </div>
+        <TableMergeAlert
+          selectedTablesCount={selectedTablesToMerge.length}
+          onMergeTables={handleMergeTables}
+        />
       )}
 
       {viewMode === 'map' ? (
@@ -280,344 +221,77 @@ export default function Tables() {
           onTableMove={updateTablePosition}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredTables.map((table) => (
-          <div
-            key={table.id}
-            className={`p-4 rounded-lg shadow-sm border-2 relative ${
-              isMergeMode && selectedTablesToMerge.includes(table.id)
-                ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100/50'
-                : 
-              table.status === 'occupied' ? 'border-red-500 bg-gradient-to-br from-red-50 to-red-100/50' :
-              table.status === 'reserved' ? 'border-yellow-500 bg-gradient-to-br from-yellow-50 to-yellow-100/50' :
-              'border-green-500 bg-gradient-to-br from-green-50 to-green-100/50'
-            } ${isMergeMode ? 'cursor-pointer hover:scale-[1.02] transition-transform' : ''}`}
-            onClick={() => isMergeMode && toggleTableSelection(table.id)}
-          >
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-lg font-semibold">Tavolo {table.number}</h3>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`px-2 py-1 rounded-full text-sm ${
-                    table.status === 'occupied' ? 'bg-red-100/80 text-red-800 backdrop-blur-sm' :
-                    table.status === 'reserved' ? 'bg-yellow-100/80 text-yellow-800 backdrop-blur-sm' :
-                    'bg-green-100/80 text-green-800 backdrop-blur-sm'
-                  }`}
-                >
-                  {table.status === 'occupied' ? 'Occupato' :
-                   table.status === 'reserved' ? 'Prenotato' : 'Libero'}
-                </span>
-                <div className="relative">
-                  <button
-                    onClick={() => setShowActionsFor(showActionsFor === table.id ? null : table.id)}
-                    className="p-1 hover:bg-gray-100/50 rounded-full transition-colors"
-                  >
-                    <MoreVertical className="w-5 h-5 text-gray-500" />
-                  </button>
-                  
-                  {showActionsFor === table.id && (
-                    <div className="absolute right-0 mt-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                      <div className="py-1 divide-y divide-gray-100">
-                        <button
-                          onClick={() => {
-                            setSelectedTable(table);
-                            setEditingTable({
-                              number: table.number.toString(),
-                              capacity: table.capacity.toString()
-                            });
-                            setShowActionsFor(null);
-                          }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <Pencil className="w-4 h-4 mr-2" />
-                          Modifica
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedTable(table);
-                            setEditingNotes(table.notes || '');
-                            setIsNotesModalOpen(true);
-                            setShowActionsFor(null);
-                          }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <StickyNote className="w-4 h-4 mr-2" />
-                          Note
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedTableForReservation(table);
-                            setIsReservationModalOpen(true);
-                            setShowActionsFor(null);
-                          }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Prenota
-                        </button>
-                        {table.merged_with && table.merged_with.length > 0 && (
-                          <button
-                            onClick={() => handleUnmergeTable(table.id)}
-                            className="flex items-center w-full px-4 py-2 text-sm text-blue-600 hover:bg-gray-50 transition-colors"
-                          >
-                            <Unlink className="w-4 h-4 mr-2" />
-                            Separa tavoli
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDeleteTable(table.id)}
-                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Elimina
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center text-gray-600 mb-3">
-              <Users className="w-4 h-4 mr-2" />
-              <span>{table.capacity} persone</span>
-              {table.merged_with && table.merged_with.length > 0 && (
-                <span className="ml-2 text-sm text-blue-600">
-                  (Unito con {table.merged_with.length} {table.merged_with.length === 1 ? 'tavolo' : 'tavoli'})
-                </span>
-              )}
-            </div>
-            {table.notes && (
-              <div className="mb-3 text-sm text-gray-600 bg-white/50 backdrop-blur-sm p-2 rounded-lg shadow-sm">
-                <div className="flex items-start gap-2">
-                  <StickyNote className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <p className="flex-1">{table.notes}</p>
-                </div>
-              </div>
-            )}
-            <div className="flex gap-2">
-              {table.status !== 'free' && (
-                <button
-                  onClick={() => handleStatusChange(table.id, 'free')}
-                  className="flex-1 px-2 py-1 text-sm bg-green-100/80 text-green-700 rounded-lg hover:bg-green-200/80 transition-colors backdrop-blur-sm"
-                >
-                  Libera
-                </button>
-              )}
-              {table.status !== 'occupied' && (
-                <button
-                  onClick={() => handleStatusChange(table.id, 'occupied')}
-                  className="flex-1 px-2 py-1 text-sm bg-red-100/80 text-red-700 rounded-lg hover:bg-red-200/80 transition-colors backdrop-blur-sm"
-                >
-                  Occupa
-                </button>
-              )}
-              {table.status !== 'reserved' && (
-                <button
-                  onClick={() => handleStatusChange(table.id, 'reserved')}
-                  className="flex-1 px-2 py-1 text-sm bg-yellow-100/80 text-yellow-700 rounded-lg hover:bg-yellow-200/80 transition-colors backdrop-blur-sm"
-                >
-                  Prenota
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+        <TableList
+          tables={filteredTables}
+          isMergeMode={isMergeMode}
+          selectedTables={selectedTablesToMerge}
+          onTableSelect={toggleTableSelection}
+          onTableClick={(table) => {
+            setSelectedTableForReservation(table);
+            setIsReservationModalOpen(true);
+          }}
+          onStatusChange={handleStatusChange}
+          onShowActions={setShowActionsFor}
+          showActionsFor={showActionsFor}
+          onEdit={(table) => {
+            setSelectedTable(table);
+            setEditingTable({
+              number: table.number.toString(),
+              capacity: table.capacity.toString()
+            });
+          }}
+          onDelete={handleDeleteTable}
+          onNotes={(table) => {
+            setSelectedTable(table);
+            setEditingNotes(table.notes || '');
+            setIsNotesModalOpen(true);
+          }}
+          onUnmerge={handleUnmergeTable}
+          onReserve={(table) => {
+            setSelectedTableForReservation(table);
+            setIsReservationModalOpen(true);
+          }}
+        />
       )}
 
+      <TableModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setNewTable({ number: '', capacity: '' });
+        }}
+        onSubmit={handleCreateTable}
+        formData={newTable}
+        setFormData={setNewTable}
+        isCreating={isCreating}
+      />
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">Nuovo Tavolo</h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
+      <TableModal
+        isOpen={!!selectedTable}
+        onClose={() => {
+          setSelectedTable(null);
+          setEditingTable({ number: '', capacity: '' });
+        }}
+        onSubmit={handleEditTable}
+        formData={editingTable}
+        setFormData={setEditingTable}
+        isCreating={isEditing}
+        isEditing
+      />
 
-            <form onSubmit={handleCreateTable} className="p-6 space-y-4">
-              <div>
-                <label htmlFor="number" className="block text-sm font-medium text-gray-700">
-                  Numero tavolo
-                </label>
-                <input
-                  type="number"
-                  id="number"
-                  min="1"
-                  required
-                  value={newTable.number}
-                  onChange={(e) => setNewTable(prev => ({ ...prev, number: e.target.value }))}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="capacity" className="block text-sm font-medium text-gray-700">
-                  Capacità (persone)
-                </label>
-                <input
-                  type="number"
-                  id="capacity"
-                  min="1"
-                  required
-                  value={newTable.capacity}
-                  onChange={(e) => setNewTable(prev => ({ ...prev, capacity: e.target.value }))}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                >
-                  Annulla
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 border border-transparent rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
-                >
-                  {isCreating ? 'Creazione...' : 'Crea Tavolo'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {selectedTable && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">Modifica Tavolo {selectedTable.number}</h2>
-              <button
-                onClick={() => {
-                  setSelectedTable(null);
-                  setEditingTable({ number: '', capacity: '' });
-                }}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <form onSubmit={handleEditTable} className="p-6 space-y-4">
-              <div>
-                <label htmlFor="number" className="block text-sm font-medium text-gray-700">
-                  Numero tavolo
-                </label>
-                <input
-                  type="number"
-                  id="number"
-                  min="1"
-                  required
-                  value={editingTable.number}
-                  onChange={(e) => setEditingTable(prev => ({ ...prev, number: e.target.value }))}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="capacity" className="block text-sm font-medium text-gray-700">
-                  Capacità (persone)
-                </label>
-                <input
-                  type="number"
-                  id="capacity"
-                  min="1"
-                  required
-                  value={editingTable.capacity}
-                  onChange={(e) => setEditingTable(prev => ({ ...prev, capacity: e.target.value }))}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedTable(null);
-                    setEditingTable({ number: '', capacity: '' });
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                >
-                  Annulla
-                </button>
-                <button
-                  type="submit"
-                  disabled={isEditing}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 border border-transparent rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
-                >
-                  {isEditing ? 'Salvataggio...' : 'Salva Modifiche'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {isNotesModalOpen && selectedTable && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">Note - Tavolo {selectedTable.number}</h2>
-              <button
-                onClick={() => {
-                  setIsNotesModalOpen(false);
-                  setSelectedTable(null);
-                  setEditingNotes('');
-                }}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveNotes} className="p-6">
-              <div className="mb-4">
-                <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-                  Note
-                </label>
-                <textarea
-                  id="notes"
-                  rows={4}
-                  value={editingNotes}
-                  onChange={(e) => setEditingNotes(e.target.value)}
-                  placeholder="Inserisci le note per questo tavolo..."
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsNotesModalOpen(false);
-                    setSelectedTable(null);
-                    setEditingNotes('');
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                >
-                  Annulla
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSavingNotes}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 border border-transparent rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
-                >
-                  {isSavingNotes ? 'Salvataggio...' : 'Salva Note'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <TableNotesModal
+        isOpen={isNotesModalOpen}
+        onClose={() => {
+          setIsNotesModalOpen(false);
+          setSelectedTable(null);
+          setEditingNotes('');
+        }}
+        onSubmit={handleSaveNotes}
+        notes={editingNotes}
+        setNotes={setEditingNotes}
+        isSaving={isSavingNotes}
+        table={selectedTable}
+      />
       
       {isReservationModalOpen && selectedTableForReservation && (
         <ReservationModal
