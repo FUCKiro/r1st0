@@ -1,34 +1,299 @@
-{
-  "name": "restaurant-pro",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build:web": "tsc && vite build",
-    "build": "npm run build:web",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.39.3",
-    "date-fns": "^3.3.1",
-    "lucide-react": "^0.330.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.22.0",
-    "workbox-window": "^7.0.0"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.55",
-    "@types/react-dom": "^18.2.19",
-    "@vitejs/plugin-react": "^4.2.1",
-    "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.35",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5.3.3",
-    "vite": "^5.1.0",
-    "vite-plugin-pwa": "^0.17.5",
-    "@vite-pwa/assets-generator": "^0.2.4",
-    "workbox-precaching": "^7.0.0"
+import { useState, useEffect } from 'react';
+import OrderHeader from '@/components/orders/OrderHeader';
+import OrderSearch from '@/components/orders/OrderSearch';
+import OrderCard from '@/components/orders/OrderCard';
+import OrderModal from '@/components/orders/OrderModal';
+import { getOrders, createOrder, addToOrder, updateOrderStatus, updateOrderItemStatus, deleteOrder, useOrdersSubscription, type Order } from '@/lib/orders';
+import { getTables, type Table } from '@/lib/tables';
+import { getMenuItems, getMenuCategories, type MenuItem, type MenuCategory } from '@/lib/menu';
+
+export default function Orders() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddToOrderModalOpen, setIsAddToOrderModalOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState<Order['status'] | 'all'>('all');
+  const [tables, setTables] = useState<Table[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [newOrder, setNewOrder] = useState({
+    table_id: '',
+    notes: '',
+    items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+  });
+
+  const loadMenuData = async () => {
+    try {
+      const [itemsData, categoriesData] = await Promise.all([
+        getMenuItems(),
+        getMenuCategories()
+      ]);
+      setMenuItems(itemsData);
+      setCategories(categoriesData);
+    } catch (err) {
+      console.error('Error loading menu data:', err);
+    }
+  };
+
+  const loadOrders = async () => {
+    try {
+      const data = await getOrders();
+      setOrders(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nel caricamento degli ordini');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadTables = async () => {
+    try {
+      const data = await getTables();
+      setTables(data);
+    } catch (err) {
+      console.error('Error loading tables:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadOrders();
+    loadTables();
+    loadMenuData();
+  }, []);
+
+  useEffect(() => {
+    // Seleziona la prima categoria disponibile all'avvio
+    if (categories.length > 0 && !selectedCategoryId) {
+      setSelectedCategoryId(categories[0].id);
+    }
+  }, [categories]);
+
+  useEffect(() => {
+    useOrdersSubscription(loadOrders);
+  }, []);
+
+  const handleCreateOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await createOrder({
+        table_id: parseInt(newOrder.table_id),
+        notes: newOrder.notes || undefined,
+        items: newOrder.items
+          .filter(item => item.menu_item_id && item.quantity > 0)
+          .map(item => ({
+            menu_item_id: parseInt(item.menu_item_id),
+            quantity: item.quantity,
+            notes: item.notes || undefined
+          }))
+      });
+      setIsModalOpen(false);
+      setNewOrder({
+        table_id: '',
+        notes: '',
+        items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+      });
+      await loadOrders();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nella creazione dell\'ordine');
+    }
+  };
+
+  const handleAddToOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedOrderId) return;
+
+    try {
+      await addToOrder(
+        selectedOrderId,
+        newOrder.items
+          .filter(item => item.menu_item_id && item.quantity > 0)
+          .map(item => ({
+            menu_item_id: parseInt(item.menu_item_id),
+            quantity: item.quantity,
+            notes: item.notes || undefined
+          }))
+      );
+      setIsAddToOrderModalOpen(false);
+      setSelectedOrderId(null);
+      setNewOrder({
+        table_id: '',
+        notes: '',
+        items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+      });
+      await loadOrders();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nell\'aggiunta di piatti all\'ordine');
+    }
+  };
+
+  const handleUpdateOrderStatus = async (orderId: number, status: Order['status']) => {
+    try {
+      await updateOrderStatus(orderId, status);
+      await loadOrders();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nell\'aggiornamento dell\'ordine');
+    }
+  };
+
+  const handleUpdateOrderItemStatus = async (itemId: number, status: 'pending' | 'preparing' | 'ready' | 'served' | 'cancelled') => {
+    try {
+      await updateOrderItemStatus(itemId, status);
+      await loadOrders();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nell\'aggiornamento dell\'elemento');
+    }
+  };
+
+  const handleDeleteOrder = async (id: number) => {
+    if (!confirm('Sei sicuro di voler eliminare questo ordine?')) return;
+    try {
+      await deleteOrder(id);
+      await loadOrders();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nell\'eliminazione dell\'ordine');
+    }
+  };
+
+  const addOrderItem = () => {
+    setNewOrder(prev => ({
+      ...prev,
+      items: [...prev.items, { menu_item_id: '', quantity: 1, notes: '' }]
+    }));
+  };
+
+  const removeOrderItem = (index: number) => {
+    setNewOrder(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateOrderItem = (index: number, field: string, value: string | number) => {
+    setNewOrder(prev => ({
+      ...prev,
+      items: prev.items.map((item, i) => 
+        i === index ? { ...item, [field]: value } : item
+      )
+    }));
+  };
+
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = 
+      order.table?.number.toString().includes(searchQuery) ||
+      order.notes?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.items?.some(item => 
+        item.menu_item?.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    const matchesFilter = filter === 'all' || order.status === filter;
+    // Non mostrare gli ordini secondari dei tavoli uniti
+    const isNotSecondaryOrder = !order.merged_order_id;
+    return matchesSearch && matchesFilter && isNotSecondaryOrder;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-gray-600">Caricamento ordini...</div>
+      </div>
+    );
   }
+
+  return (
+    <div>
+      <OrderHeader
+        onNewOrder={() => setIsModalOpen(true)}
+        filter={filter}
+        onFilterChange={setFilter}
+      />
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      <div className="mt-6">
+        <OrderSearch value={searchQuery} onChange={setSearchQuery} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredOrders.map((order) => (
+          <OrderCard
+            key={order.id}
+            order={order}
+            tables={tables}
+            onUpdateOrderStatus={handleUpdateOrderStatus}
+            onUpdateOrderItemStatus={handleUpdateOrderItemStatus}
+            onAddItems={(orderId) => {
+              setSelectedOrderId(orderId);
+              setNewOrder({
+                table_id: order.table_id.toString(),
+                notes: '',
+                items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+              });
+              setIsAddToOrderModalOpen(true);
+            }}
+            onDelete={handleDeleteOrder}
+          />
+        ))}
+      </div>
+
+      <OrderModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setNewOrder({
+            table_id: '',
+            notes: '',
+            items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+          });
+        }}
+        onSubmit={handleCreateOrder}
+        tables={tables}
+        categories={categories}
+        menuItems={menuItems}
+        selectedCategoryId={selectedCategoryId}
+        onSelectCategory={setSelectedCategoryId}
+        formData={newOrder}
+        onUpdateFormData={setNewOrder}
+        onAddItem={addOrderItem}
+        onRemoveItem={removeOrderItem}
+        onUpdateItem={updateOrderItem}
+        title="Nuovo Ordine"
+        submitText="Crea Ordine"
+      />
+
+      {/* Modal Aggiungi all'Ordine */}
+      <OrderModal
+        isOpen={isAddToOrderModalOpen && selectedOrderId !== null}
+        onClose={() => {
+          setIsAddToOrderModalOpen(false);
+          setSelectedOrderId(null);
+          setNewOrder({
+            table_id: '',
+            notes: '',
+            items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+          });
+        }}
+        onSubmit={handleAddToOrder}
+        tables={tables}
+        categories={categories}
+        menuItems={menuItems}
+        selectedCategoryId={selectedCategoryId}
+        onSelectCategory={setSelectedCategoryId}
+        formData={newOrder}
+        onUpdateFormData={setNewOrder}
+        onAddItem={addOrderItem}
+        onRemoveItem={removeOrderItem}
+        onUpdateItem={updateOrderItem}
+        title="Aggiungi Piatti"
+        submitText="Aggiungi"
+      />
+    </div>
+  );
 }
