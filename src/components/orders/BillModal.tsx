@@ -1,5 +1,5 @@
 import { X, Receipt } from 'lucide-react';
-import type { Order, OrderItem } from '@/lib/orders';
+import type { Order } from '@/lib/orders';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 
@@ -51,7 +51,12 @@ export default function BillModal({ isOpen, onClose, order, onConfirm }: Props) 
                 <div className="flex-1">
                   <div className="flex justify-between">
                     <span className="font-medium">{item.menu_item?.name}</span>
-                    <span className="text-gray-600 ml-2">x{item.quantity}</span>
+                    <span className="text-gray-600 ml-2">
+                      {item.menu_item?.is_weight_based && item.weight_kg
+                        ? `${item.weight_kg.toFixed(3)} kg x${item.quantity}`
+                        : `x${item.quantity}`
+                      }
+                    </span>
                   </div>
                   {item.notes && (
                     <p className="text-sm text-gray-500 mt-1">{item.notes}</p>
@@ -59,10 +64,17 @@ export default function BillModal({ isOpen, onClose, order, onConfirm }: Props) 
                 </div>
                 <div className="ml-4 text-right">
                   <div className="font-medium">
-                    {formatCurrency((item.menu_item?.price || 0) * item.quantity)}
+                    {formatCurrency(
+                      item.menu_item?.is_weight_based
+                        ? ((item.menu_item?.price_per_kg || 0) * (item.weight_kg || 0)) * item.quantity
+                        : ((item.menu_item?.price || 0) * item.quantity)
+                    )}
                   </div>
                   <div className="text-sm text-gray-500">
-                    ({formatCurrency(item.menu_item?.price || 0)} cad.)
+                    {item.menu_item?.is_weight_based
+                      ? `€${((item.menu_item?.price_per_kg || 0) / 10).toFixed(2)}/hg`
+                      : `(${formatCurrency(item.menu_item?.price || 0)} cad.)`
+                    }
                   </div>
                 </div>
               </div>

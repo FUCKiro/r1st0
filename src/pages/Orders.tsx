@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { getOrders, createOrder, addToOrder, updateOrderStatus, updateOrderItemStatus, deleteOrder, useOrdersSubscription, type Order } from '@/lib/orders';
-import { getTables, type Table } from '@/lib/tables';
-import { getMenuItems, getMenuCategories, type MenuItem, type MenuCategory } from '@/lib/menu';
+import { useState } from 'react';
+import { type Order } from '@/lib/orders';
+import { useOrders } from '@/hooks/useOrders';
+import { useOrderForm } from '@/hooks/useOrderForm';
 import OrderHeader from '@/components/orders/OrderHeader';
 import OrderSearch from '@/components/orders/OrderSearch';
 import OrderList from '@/components/orders/OrderList';
@@ -9,90 +9,44 @@ import OrderModal from '@/components/orders/OrderModal';
 import BillModal from '@/components/orders/BillModal';
 
 export default function Orders() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    orders,
+    loading,
+    error,
+    tables,
+    menuItems,
+    categories,
+    createOrder,
+    addToOrder,
+    updateOrderStatus,
+    updateOrderItemStatus,
+    deleteOrder
+  } = useOrders();
+
+  const {
+    formData: newOrder,
+    setFormData: setNewOrder,
+    addItem: addOrderItem,
+    removeItem: removeOrderItem,
+    updateItem: updateOrderItem,
+    resetForm: resetOrderForm
+  } = useOrderForm();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddToOrderModalOpen, setIsAddToOrderModalOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<Order['status'] | 'all'>('all');
-  const [tables, setTables] = useState<Table[]>([]);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const [newOrder, setNewOrder] = useState({
-    table_id: '',
-    notes: '',
-    items: [{ menu_item_id: '', quantity: 1, weight_kg: undefined, notes: '' }]
-  });
-
   const [isBillModalOpen, setIsBillModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  // Load initial data
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        const [ordersData, tablesData, itemsData, categoriesData] = await Promise.all([
-          getOrders(),
-          getTables(),
-          getMenuItems(),
-          getMenuCategories()
-        ]);
-        
-        setOrders(ordersData);
-        setTables(tablesData);
-        setMenuItems(itemsData);
-        setCategories(categoriesData);
-        
-        if (categoriesData.length > 0) {
-          setSelectedCategoryId(categoriesData[0].id);
-        }
-        
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Errore nel caricamento dei dati');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadInitialData();
-  }, []);
-
-  // Set up real-time subscription
-  useEffect(() => {
-    useOrdersSubscription(async () => {
-      const data = await getOrders();
-      setOrders(data);
-    });
-  }, []);
-
   const handleCreateOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await createOrder({
-        table_id: parseInt(newOrder.table_id),
-        notes: newOrder.notes || undefined,
-        items: newOrder.items
-          .filter(item => item.menu_item_id && item.quantity > 0)
-          .map(item => ({
-            menu_item_id: parseInt(item.menu_item_id),
-            quantity: item.quantity,
-            notes: item.notes || undefined
-          }))
-      });
+    const success = await createOrder(newOrder);
+    if (success) {
       setIsModalOpen(false);
-      setNewOrder({
-        table_id: '',
-        notes: '',
-        items: [{ menu_item_id: '', quantity: 1, weight_kg: undefined, notes: '' }]
-      });
-      const data = await getOrders();
-      setOrders(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore nella creazione dell\'ordine');
+      resetOrderForm();
     }
   };
 
@@ -100,59 +54,11 @@ export default function Orders() {
     e.preventDefault();
     if (!selectedOrderId) return;
 
-    try {
-      await addToOrder(
-        selectedOrderId,
-        newOrder.items
-          .filter(item => item.menu_item_id && item.quantity > 0)
-          .map(item => ({
-            menu_item_id: parseInt(item.menu_item_id),
-            quantity: item.quantity,
-            notes: item.notes || undefined
-          }))
-      );
+    const success = await addToOrder(selectedOrderId, newOrder.items);
+    if (success) {
       setIsAddToOrderModalOpen(false);
       setSelectedOrderId(null);
-      setNewOrder({
-        table_id: '',
-        notes: '',
-        items: [{ menu_item_id: '', quantity: 1, weight_kg: undefined, notes: '' }]
-      });
-      const data = await getOrders();
-      setOrders(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore nell\'aggiunta di piatti all\'ordine');
-    }
-  };
-
-  const handleUpdateOrderStatus = async (orderId: number, status: Order['status']) => {
-    try {
-      await updateOrderStatus(orderId, status);
-      const data = await getOrders();
-      setOrders(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore nell\'aggiornamento dell\'ordine');
-    }
-  };
-
-  const handleUpdateOrderItemStatus = async (itemId: number, status: 'pending' | 'preparing' | 'ready' | 'served' | 'cancelled') => {
-    try {
-      await updateOrderItemStatus(itemId, status);
-      const data = await getOrders();
-      setOrders(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore nell\'aggiornamento dell\'elemento');
-    }
-  };
-
-  const handleDeleteOrder = async (id: number) => {
-    if (!confirm('Sei sicuro di voler eliminare questo ordine?')) return;
-    try {
-      await deleteOrder(id);
-      const data = await getOrders();
-      setOrders(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore nell\'eliminazione dell\'ordine');
+      resetOrderForm();
     }
   };
 
@@ -164,38 +70,11 @@ export default function Orders() {
   const handleCloseBill = async () => {
     if (!selectedOrder) return;
 
-    try {
-      await updateOrderStatus(selectedOrder.id, 'paid');
+    const success = await updateOrderStatus(selectedOrder.id, 'paid');
+    if (success) {
       setIsBillModalOpen(false);
       setSelectedOrder(null);
-      const data = await getOrders();
-      setOrders(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore nella chiusura del conto');
     }
-  };
-
-  const addOrderItem = () => {
-    setNewOrder(prev => ({
-      ...prev,
-      items: [...prev.items, { menu_item_id: '', quantity: 1, weight_kg: undefined, notes: '' }]
-    }));
-  };
-
-  const removeOrderItem = (index: number) => {
-    setNewOrder(prev => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== index)
-    }));
-  };
-
-  const updateOrderItem = (index: number, field: string, value: string | number) => {
-    setNewOrder(prev => ({
-      ...prev,
-      items: prev.items.map((item, i) => 
-        i === index ? { ...item, [field]: value } : item
-      )
-    }));
   };
 
   const filteredOrders = orders.filter(order => {
@@ -239,8 +118,8 @@ export default function Orders() {
         <OrderList
           orders={filteredOrders}
           tables={tables}
-          onUpdateOrderStatus={handleUpdateOrderStatus}
-          onUpdateOrderItemStatus={handleUpdateOrderItemStatus}
+          onUpdateOrderStatus={updateOrderStatus}
+          onUpdateOrderItemStatus={updateOrderItemStatus}
           onAddItems={(orderId) => {
             const order = orders.find(o => o.id === orderId);
             if (!order) return;
@@ -249,12 +128,12 @@ export default function Orders() {
             setNewOrder({
               table_id: order.table_id.toString(),
               notes: '',
-              items: [{ menu_item_id: '', quantity: 1, weight_kg: undefined, notes: '' }]
+              items: [{ menu_item_id: '', quantity: 1, notes: '', weight_kg: undefined }]
             });
             setIsAddToOrderModalOpen(true);
           }}
           onShowBill={handleShowBill}
-          onDelete={handleDeleteOrder}
+          onDelete={deleteOrder}
         />
       </div>
 
@@ -262,11 +141,7 @@ export default function Orders() {
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
-          setNewOrder({
-            table_id: '',
-            notes: '',
-            items: [{ menu_item_id: '', quantity: 1, weight_kg: undefined, notes: '' }]
-          });
+          resetOrderForm();
         }}
         onSubmit={handleCreateOrder}
         tables={tables}
@@ -288,11 +163,7 @@ export default function Orders() {
         onClose={() => {
           setIsAddToOrderModalOpen(false);
           setSelectedOrderId(null);
-          setNewOrder({
-            table_id: '',
-            notes: '',
-            items: [{ menu_item_id: '', quantity: 1, weight_kg: undefined, notes: '' }]
-          });
+          resetOrderForm();
         }}
         onSubmit={handleAddToOrder}
         tables={tables}

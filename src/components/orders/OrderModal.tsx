@@ -14,23 +14,14 @@ interface Props {
   formData: {
     table_id: string;
     notes: string;
-    items: Array<{
+    items: {
       menu_item_id: string;
       quantity: number;
-      weight_kg?: number;
       notes: string;
-    }>;
+      weight_kg?: number;
+    }[];
   };
-  onUpdateFormData: (data: {
-    table_id: string;
-    notes: string;
-    items: Array<{
-      menu_item_id: string;
-      quantity: number;
-      weight_kg?: number;
-      notes: string;
-    }>;
-  }) => void;
+  onUpdateFormData: React.Dispatch<React.SetStateAction<typeof formData>>;
   onAddItem: () => void;
   onRemoveItem: (index: number) => void;
   onUpdateItem: (index: number, field: string, value: string | number) => void;
@@ -155,13 +146,35 @@ export default function OrderModal({
                               .filter(menuItem => menuItem.category_id === selectedCategoryId)
                               .map(menuItem => (
                                 <option key={menuItem.id} value={menuItem.id}>
-                                  {menuItem.name} - €{menuItem.price.toFixed(2)}
+                                  {menuItem.name} - {menuItem.is_weight_based 
+                                    ? `€${((menuItem.price_per_kg || 0) / 10).toFixed(2)}/hg`
+                                    : `€${menuItem.price.toFixed(2)}`
+                                  }
                                 </option>
                               ))}
                           </select>
                         </div>
 
-                        <div className="w-full sm:w-20">
+                        {menuItems.find(menuItem => menuItem.id === parseInt(item.menu_item_id))?.is_weight_based ? (
+                          <div className="w-full sm:w-32">
+                            <div className="relative">
+                              <input
+                                type="number"
+                                min="0.1"
+                                step="0.1"
+                                required
+                                value={item.weight_kg || ''}
+                                onChange={(e) => onUpdateItem(index, 'weight_kg', parseFloat(e.target.value))}
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 pr-8"
+                                placeholder="Peso"
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                                kg
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="w-full sm:w-20">
                           <input
                             type="number"
                             min="1"
@@ -170,7 +183,8 @@ export default function OrderModal({
                             onChange={(e) => onUpdateItem(index, 'quantity', parseInt(e.target.value))}
                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                           />
-                        </div>
+                          </div>
+                        )}
 
                         <button
                           type="button"

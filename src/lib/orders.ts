@@ -51,6 +51,7 @@ export async function createOrder(data: {
   items: Array<{
     menu_item_id: number;
     quantity: number;
+    weight_kg?: number;
     notes?: string;
   }>;
 }) {
@@ -81,6 +82,7 @@ export async function createOrder(data: {
         menu_item_id: item.menu_item_id,
         quantity: item.quantity,
         notes: item.notes,
+        weight_kg: item.weight_kg,
         status: 'pending'
       }))
     );
@@ -93,6 +95,7 @@ export async function createOrder(data: {
 export async function addToOrder(orderId: number, items: Array<{
   menu_item_id: number;
   quantity: number;
+  weight_kg?: number;
   notes?: string;
 }>) {
   const { error: itemsError } = await supabase
@@ -102,6 +105,7 @@ export async function addToOrder(orderId: number, items: Array<{
         order_id: orderId,
         menu_item_id: item.menu_item_id,
         quantity: item.quantity,
+        weight_kg: item.weight_kg,
         notes: item.notes,
         status: 'pending'
       }))
