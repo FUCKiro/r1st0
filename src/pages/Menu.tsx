@@ -36,7 +36,9 @@ export default function Menu() {
     is_vegetarian: false,
     is_vegan: false,
     is_gluten_free: false,
-    spiciness_level: 0
+    spiciness_level: 0,
+    is_weight_based: false,
+    price_per_kg: ''
   });
 
   useEffect(() => {
@@ -92,7 +94,7 @@ export default function Menu() {
       const itemData = {
         name: itemFormData.name,
         description: itemFormData.description || undefined,
-        price: parseFloat(itemFormData.price),
+        price: itemFormData.is_weight_based ? 0 : parseFloat(itemFormData.price || '0'),
         category_id: parseInt(itemFormData.category_id),
         is_available: itemFormData.is_available,
         preparation_time: itemFormData.preparation_time || undefined,
@@ -101,7 +103,9 @@ export default function Menu() {
         is_vegetarian: itemFormData.is_vegetarian,
         is_vegan: itemFormData.is_vegan,
         is_gluten_free: itemFormData.is_gluten_free,
-        spiciness_level: itemFormData.spiciness_level
+        spiciness_level: itemFormData.spiciness_level,
+        is_weight_based: itemFormData.is_weight_based,
+        price_per_kg: itemFormData.is_weight_based ? parseFloat(itemFormData.price_per_kg || '0') * 10 : undefined // Convert hg price to kg price
       };
 
       if (selectedItem) {
@@ -123,7 +127,9 @@ export default function Menu() {
         is_vegetarian: false,
         is_vegan: false,
         is_gluten_free: false,
-        spiciness_level: 0
+        spiciness_level: 0,
+        is_weight_based: false,
+        price_per_kg: ''
       });
       await loadMenu();
     } catch (err) {
@@ -188,7 +194,9 @@ export default function Menu() {
             is_vegetarian: false,
             is_vegan: false,
             is_gluten_free: false,
-            spiciness_level: 0
+            spiciness_level: 0,
+            is_weight_based: false,
+            price_per_kg: '',
           });
           setIsItemModalOpen(true);
         }}
@@ -239,7 +247,9 @@ export default function Menu() {
                 is_vegetarian: item.is_vegetarian,
                 is_vegan: item.is_vegan,
                 is_gluten_free: item.is_gluten_free,
-                spiciness_level: item.spiciness_level
+                spiciness_level: item.spiciness_level,
+                is_weight_based: item.is_weight_based,
+                price_per_kg: item.price_per_kg?.toString() || '',
               });
               setIsItemModalOpen(true);
             }}
@@ -278,7 +288,9 @@ export default function Menu() {
             is_vegetarian: false,
             is_vegan: false,
             is_gluten_free: false,
-            spiciness_level: 0
+            spiciness_level: 0,
+            is_weight_based: false,
+            price_per_kg: ''
           });
         }}
         onSubmit={handleItemSubmit}

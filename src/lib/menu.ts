@@ -24,6 +24,8 @@ export interface MenuItem {
   is_vegan: boolean;
   is_gluten_free: boolean;
   spiciness_level: number;
+  is_weight_based: boolean;
+  price_per_kg?: number;
   created_at: string;
   updated_at: string;
 }
@@ -98,7 +100,9 @@ export async function createMenuItem(data: Omit<MenuItem, 'id' | 'created_at' | 
       is_vegetarian: data.is_vegetarian,
       is_vegan: data.is_vegan,
       is_gluten_free: data.is_gluten_free,
-      spiciness_level: data.spiciness_level
+      spiciness_level: data.spiciness_level,
+      is_weight_based: data.is_weight_based,
+      price_per_kg: data.price_per_kg
     }]);
     
   if (error) throw error;

@@ -18,6 +18,8 @@ interface Props {
     is_vegan: boolean;
     is_gluten_free: boolean;
     spiciness_level: number;
+    is_weight_based: boolean;
+    price_per_kg: string;
   };
   setFormData: React.Dispatch<React.SetStateAction<{
     name: string;
@@ -32,6 +34,8 @@ interface Props {
     is_vegan: boolean;
     is_gluten_free: boolean;
     spiciness_level: number;
+    is_weight_based: boolean;
+    price_per_kg: string;
   }>>;
   selectedItem: MenuItem | null;
   categories: MenuCategory[];
@@ -93,69 +97,71 @@ export default function MenuItemModal({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                    Prezzo
-                  </label>
-                  <input
-                    type="number"
-                    id="price"
-                    step="0.01"
-                    min="0"
-                    required
-                    value={formData.price}
-                    onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-                    Categoria
-                  </label>
-                  <select
-                    id="category"
-                    required
-                    value={formData.category_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
-                  >
-                    <option value="">Seleziona categoria</option>
-                    {categories.map(category => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
               <div>
-                <label htmlFor="preparation_time" className="block text-sm font-medium text-gray-700">
-                  Tempo di preparazione (minuti)
+                <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                  {formData.is_weight_based ? 'Prezzo per hg (€)' : 'Prezzo (€)'}
                 </label>
                 <input
                   type="number"
-                  id="preparation_time"
-                  min="1"
-                  value={formData.preparation_time}
-                  onChange={(e) => setFormData(prev => ({ ...prev, preparation_time: e.target.value }))}
+                  id="price"
+                  step="0.01"
+                  min="0"
+                  required
+                  value={formData.is_weight_based ? formData.price_per_kg : formData.price}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    [prev.is_weight_based ? 'price_per_kg' : 'price']: e.target.value 
+                  }))}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
                 />
+                {formData.is_weight_based && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Il prezzo finale verrà calcolato in base al peso in ettogrammi
+                  </p>
+                )}
               </div>
 
               <div>
-                <label htmlFor="image_url" className="block text-sm font-medium text-gray-700">
-                  URL Immagine
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+                  Categoria
                 </label>
-                <input
-                  type="url"
-                  id="image_url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+                <select
+                  id="category"
+                  required
+                  value={formData.category_id}
+                  onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
+                >
+                  <option value="">Seleziona categoria</option>
+                  {categories.map(category => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="is_weight_based"
+                  checked={formData.is_weight_based}
+                  onChange={(e) => {
+                    const isWeightBased = e.target.checked;
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      is_weight_based: isWeightBased,
+                      price: isWeightBased ? '' : prev.price,
+                      price_per_kg: isWeightBased ? prev.price : ''
+                    }));
+                  }}
+                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
                 />
+                <label htmlFor="is_weight_based" className="ml-2 block text-sm text-gray-900">
+                  Prezzo al peso (hg)
+                </label>
               </div>
             </div>
 

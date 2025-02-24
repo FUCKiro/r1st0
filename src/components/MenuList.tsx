@@ -26,7 +26,10 @@ export default function MenuList({ items, onEdit, onDelete }: Props) {
             <div className="flex justify-between items-start mb-2">
               <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
               <span className="text-lg font-semibold text-red-600">
-                €{item.price.toFixed(2)}
+                {item.is_weight_based 
+                  ? `€${(item.price_per_kg / 10).toFixed(2)}/hg`
+                  : `€${item.price.toFixed(2)}`
+                }
               </span>
             </div>
             
