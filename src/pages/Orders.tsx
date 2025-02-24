@@ -6,6 +6,7 @@ import OrderHeader from '@/components/orders/OrderHeader';
 import OrderSearch from '@/components/orders/OrderSearch';
 import OrderList from '@/components/orders/OrderList';
 import OrderModal from '@/components/orders/OrderModal';
+import BillModal from '@/components/orders/BillModal';
 
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -25,6 +26,9 @@ export default function Orders() {
     notes: '',
     items: [{ menu_item_id: '', quantity: 1, notes: '' }]
   });
+
+  const [isBillModalOpen, setIsBillModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   // Load initial data
   useEffect(() => {
@@ -152,6 +156,25 @@ export default function Orders() {
     }
   };
 
+  const handleShowBill = (order: Order) => {
+    setSelectedOrder(order);
+    setIsBillModalOpen(true);
+  };
+
+  const handleCloseBill = async () => {
+    if (!selectedOrder) return;
+
+    try {
+      await updateOrderStatus(selectedOrder.id, 'paid');
+      setIsBillModalOpen(false);
+      setSelectedOrder(null);
+      const data = await getOrders();
+      setOrders(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nella chiusura del conto');
+    }
+  };
+
   const addOrderItem = () => {
     setNewOrder(prev => ({
       ...prev,
@@ -230,6 +253,7 @@ export default function Orders() {
             });
             setIsAddToOrderModalOpen(true);
           }}
+          onShowBill={handleShowBill}
           onDelete={handleDeleteOrder}
         />
       </div>
@@ -284,6 +308,18 @@ export default function Orders() {
         title={`Aggiungi piatti all'ordine #${selectedOrderId}`}
         submitText="Aggiungi all'ordine"
       />
+
+      {selectedOrder && (
+        <BillModal
+          isOpen={isBillModalOpen}
+          onClose={() => {
+            setIsBillModalOpen(false);
+            setSelectedOrder(null);
+          }}
+          order={selectedOrder}
+          onConfirm={handleCloseBill}
+        />
+      )}
     </div>
   );
 }

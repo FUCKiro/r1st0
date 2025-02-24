@@ -7,7 +7,7 @@ interface Props {
   isMergeMode: boolean;
   onMergeModeChange: (mergeMode: boolean) => void;
   selectedTablesCount: number;
-  onMergeTables: () => void;
+  onMergeTables: () => Promise<void>;
 }
 
 export default function TableHeader({
@@ -53,15 +53,25 @@ export default function TableHeader({
         <button
           onClick={() => {
             onMergeModeChange(!isMergeMode);
-          }}
+          }} 
           className={`ml-2 px-4 py-2 rounded-md text-sm font-medium ${
             isMergeMode
               ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
               : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-          }`}
+          } ${selectedTablesCount > 1 ? 'relative' : ''}`}
         >
           <Link2 className="w-4 h-4 inline-block mr-2" />
-          {isMergeMode ? 'Annulla Unione' : 'Unisci Tavoli'}
+          {isMergeMode ? (
+            <>
+              {selectedTablesCount > 1 ? (
+                <span onClick={onMergeTables}>Unisci {selectedTablesCount} tavoli</span>
+              ) : (
+                'Annulla Unione'
+              )}
+            </>
+          ) : (
+            'Unisci Tavoli'
+          )}
         </button>
       </div>
     </div>

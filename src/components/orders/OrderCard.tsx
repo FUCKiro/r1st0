@@ -1,4 +1,4 @@
-import { Clock, ChefHat, Receipt, Ban, CheckCircle, DollarSign, X, PlusCircle } from 'lucide-react';
+import { Clock, ChefHat, Ban, CheckCircle, DollarSign, X, PlusCircle, Receipt } from 'lucide-react';
 import type { Order, OrderItem } from '@/lib/orders';
 import type { Table } from '@/lib/tables';
 import OrderItemList from './OrderItemList';
@@ -7,8 +7,9 @@ interface Props {
   order: Order;
   tables: Table[];
   onUpdateOrderStatus: (orderId: number, status: Order['status']) => void;
-  onUpdateOrderItemStatus: (itemId: number, status: OrderItem['status']) => void;
+  onUpdateOrderItemStatus: (itemId: number, status: OrderItem['status']) => Promise<void>;
   onAddItems: (orderId: number) => void;
+  onShowBill: (order: Order) => void;
   onDelete: (orderId: number) => void;
 }
 
@@ -18,6 +19,7 @@ export default function OrderCard({
   onUpdateOrderStatus,
   onUpdateOrderItemStatus,
   onAddItems,
+  onShowBill,
   onDelete
 }: Props) {
   const table = tables.find(t => t.id === order.table_id);
@@ -35,14 +37,23 @@ export default function OrderCard({
         <div className="flex space-x-2">
           <button
             onClick={() => onAddItems(order.id)}
-            className="text-green-500 hover:text-green-600"
+            className="text-green-500 hover:text-green-600 transition-colors"
             title="Aggiungi piatti"
           >
             <PlusCircle size={20} />
           </button>
+          {order.status === 'served' && (
+            <button
+              onClick={() => onShowBill(order)}
+              className="text-blue-500 hover:text-blue-600 transition-colors"
+              title="Chiudi conto"
+            >
+              <Receipt size={20} />
+            </button>
+          )}
           <button
             onClick={() => onDelete(order.id)}
-            className="text-red-500 hover:text-red-600"
+            className="text-red-500 hover:text-red-600 transition-colors"
             title="Elimina ordine"
           >
             <X size={20} />

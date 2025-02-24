@@ -1,4 +1,3 @@
-import { Users, StickyNote } from 'lucide-react';
 import type { Table } from '@/lib/tables';
 import TableListItem from './TableListItem';
 

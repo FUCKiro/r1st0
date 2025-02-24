@@ -8,6 +8,7 @@ interface Props {
   onUpdateOrderStatus: (orderId: number, status: Order['status']) => Promise<void>;
   onUpdateOrderItemStatus: (itemId: number, status: OrderItem['status']) => Promise<void>;
   onAddItems: (orderId: number) => void;
+  onShowBill: (order: Order) => void;
   onDelete: (id: number) => Promise<void>;
 }
 
@@ -17,6 +18,7 @@ export default function OrderList({
   onUpdateOrderStatus,
   onUpdateOrderItemStatus,
   onAddItems,
+  onShowBill,
   onDelete
 }: Props) {
   return (
@@ -29,6 +31,7 @@ export default function OrderList({
           onUpdateOrderStatus={onUpdateOrderStatus}
           onUpdateOrderItemStatus={onUpdateOrderItemStatus}
           onAddItems={onAddItems}
+          onShowBill={onShowBill}
           onDelete={onDelete}
         />
       ))}

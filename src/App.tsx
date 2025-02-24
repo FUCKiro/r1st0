@@ -1,291 +1,34 @@
-import { useState, useEffect } from 'react';
-import { getOrders, createOrder, addToOrder, updateOrderStatus, updateOrderItemStatus, deleteOrder, useOrdersSubscription, type Order } from '@/lib/orders';
-import { getTables, type Table } from '@/lib/tables';
-import { getMenuItems, getMenuCategories, type MenuItem, type MenuCategory } from '@/lib/menu';
-import OrderHeader from '@/components/orders/OrderHeader';
-import OrderSearch from '@/components/orders/OrderSearch';
-import OrderList from '@/components/orders/OrderList';
-import OrderModal from '@/components/orders/OrderModal';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import Layout from '@/components/Layout';
 
-export default function Orders() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAddToOrderModalOpen, setIsAddToOrderModalOpen] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState<Order['status'] | 'all'>('all');
-  const [tables, setTables] = useState<Table[]>([]);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [categories, setCategories] = useState<MenuCategory[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const [newOrder, setNewOrder] = useState({
-    table_id: '',
-    notes: '',
-    items: [{ menu_item_id: '', quantity: 1, notes: '' }]
-  });
+const Login = lazy(() => import('@/pages/Login'));
+const Register = lazy(() => import('@/pages/Register'));
+const Tables = lazy(() => import('@/pages/Tables'));
+const Menu = lazy(() => import('@/pages/Menu'));
+const Orders = lazy(() => import('@/pages/Orders'));
+const Waiters = lazy(() => import('@/pages/Waiters'));
+const Profile = lazy(() => import('@/pages/Profile'));
 
-  // Load initial data
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        const [ordersData, tablesData, itemsData, categoriesData] = await Promise.all([
-          getOrders(),
-          getTables(),
-          getMenuItems(),
-          getMenuCategories()
-        ]);
-        
-        setOrders(ordersData);
-        setTables(tablesData);
-        setMenuItems(itemsData);
-        setCategories(categoriesData);
-        
-        if (categoriesData.length > 0) {
-          setSelectedCategoryId(categoriesData[0].id);
-        }
-        
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Errore nel caricamento dei dati');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadInitialData();
-  }, []);
-
-  // Set up real-time subscription
-  useEffect(() => {
-    useOrdersSubscription(async () => {
-      const data = await getOrders();
-      setOrders(data);
-    });
-  }, []);
-
-  const handleCreateOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await createOrder({
-        table_id: parseInt(newOrder.table_id),
-        notes: newOrder.notes || undefined,
-        items: newOrder.items
-          .filter(item => item.menu_item_id && item.quantity > 0)
-          .map(item => ({
-            menu_item_id: parseInt(item.menu_item_id),
-            quantity: item.quantity,
-            notes: item.notes || undefined
-          }))
-      });
-      setIsModalOpen(false);
-      setNewOrder({
-        table_id: '',
-        notes: '',
-        items: [{ menu_item_id: '', quantity: 1, notes: '' }]
-      });
-      const data = await getOrders();
-      setOrders(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore nella creazione dell\'ordine');
-    }
-  };
-
-  const handleAddToOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedOrderId) return;
-
-    try {
-      await addToOrder(
-        selectedOrderId,
-        newOrder.items
-          .filter(item => item.menu_item_id && item.quantity > 0)
-          .map(item => ({
-            menu_item_id: parseInt(item.menu_item_id),
-            quantity: item.quantity,
-            notes: item.notes || undefined
-          }))
-      );
-      setIsAddToOrderModalOpen(false);
-      setSelectedOrderId(null);
-      setNewOrder({
-        table_id: '',
-        notes: '',
-        items: [{ menu_item_id: '', quantity: 1, notes: '' }]
-      });
-      const data = await getOrders();
-      setOrders(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore nell\'aggiunta di piatti all\'ordine');
-    }
-  };
-
-  const handleUpdateOrderStatus = async (orderId: number, status: Order['status']) => {
-    try {
-      await updateOrderStatus(orderId, status);
-      const data = await getOrders();
-      setOrders(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore nell\'aggiornamento dell\'ordine');
-    }
-  };
-
-  const handleUpdateOrderItemStatus = async (itemId: number, status: 'pending' | 'preparing' | 'ready' | 'served' | 'cancelled') => {
-    try {
-      await updateOrderItemStatus(itemId, status);
-      const data = await getOrders();
-      setOrders(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore nell\'aggiornamento dell\'elemento');
-    }
-  };
-
-  const handleDeleteOrder = async (id: number) => {
-    if (!confirm('Sei sicuro di voler eliminare questo ordine?')) return;
-    try {
-      await deleteOrder(id);
-      const data = await getOrders();
-      setOrders(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore nell\'eliminazione dell\'ordine');
-    }
-  };
-
-  const addOrderItem = () => {
-    setNewOrder(prev => ({
-      ...prev,
-      items: [...prev.items, { menu_item_id: '', quantity: 1, notes: '' }]
-    }));
-  };
-
-  const removeOrderItem = (index: number) => {
-    setNewOrder(prev => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== index)
-    }));
-  };
-
-  const updateOrderItem = (index: number, field: string, value: string | number) => {
-    setNewOrder(prev => ({
-      ...prev,
-      items: prev.items.map((item, i) => 
-        i === index ? { ...item, [field]: value } : item
-      )
-    }));
-  };
-
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      order.table?.number.toString().includes(searchQuery) ||
-      order.notes?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.items?.some(item => 
-        item.menu_item?.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    const matchesFilter = filter === 'all' || order.status === filter;
-    // Don't show secondary orders from merged tables
-    const isNotSecondaryOrder = !order.merged_order_id;
-    return matchesSearch && matchesFilter && isNotSecondaryOrder;
-  });
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-gray-600">Caricamento ordini...</div>
-      </div>
-    );
-  }
-
+export default function App() {
   return (
-    <div>
-      <OrderHeader
-        onNewOrder={() => setIsModalOpen(true)}
-        filter={filter}
-        onFilterChange={setFilter}
-      />
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
-          {error}
-        </div>
-      )}
-
-      <div className="mt-6">
-        <OrderSearch value={searchQuery} onChange={setSearchQuery} />
-      </div>
-
-      <div className="mt-6">
-        <OrderList
-          orders={filteredOrders}
-          tables={tables}
-          onUpdateOrderStatus={handleUpdateOrderStatus}
-          onUpdateOrderItemStatus={handleUpdateOrderItemStatus}
-          onAddItems={(orderId) => {
-            const order = orders.find(o => o.id === orderId);
-            if (!order) return;
-            
-            setSelectedOrderId(orderId);
-            setNewOrder({
-              table_id: order.table_id.toString(),
-              notes: '',
-              items: [{ menu_item_id: '', quantity: 1, notes: '' }]
-            });
-            setIsAddToOrderModalOpen(true);
-          }}
-          onDelete={handleDeleteOrder}
-        />
-      </div>
-
-      <OrderModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setNewOrder({
-            table_id: '',
-            notes: '',
-            items: [{ menu_item_id: '', quantity: 1, notes: '' }]
-          });
-        }}
-        onSubmit={handleCreateOrder}
-        tables={tables}
-        categories={categories}
-        menuItems={menuItems}
-        selectedCategoryId={selectedCategoryId}
-        onSelectCategory={setSelectedCategoryId}
-        formData={newOrder}
-        onUpdateFormData={setNewOrder}
-        onAddItem={addOrderItem}
-        onRemoveItem={removeOrderItem}
-        onUpdateItem={updateOrderItem}
-        title="Nuovo Ordine"
-        submitText="Crea Ordine"
-      />
-
-      <OrderModal
-        isOpen={isAddToOrderModalOpen && selectedOrderId !== null}
-        onClose={() => {
-          setIsAddToOrderModalOpen(false);
-          setSelectedOrderId(null);
-          setNewOrder({
-            table_id: '',
-            notes: '',
-            items: [{ menu_item_id: '', quantity: 1, notes: '' }]
-          });
-        }}
-        onSubmit={handleAddToOrder}
-        tables={tables}
-        categories={categories}
-        menuItems={menuItems}
-        selectedCategoryId={selectedCategoryId}
-        onSelectCategory={setSelectedCategoryId}
-        formData={newOrder}
-        onUpdateFormData={setNewOrder}
-        onAddItem={addOrderItem}
-        onRemoveItem={removeOrderItem}
-        onUpdateItem={updateOrderItem}
-        title={`Aggiungi piatti all'ordine #${selectedOrderId}`}
-        submitText="Aggiungi all'ordine"
-      />
-    </div>
+    <BrowserRouter>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          
+          <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+            <Route index element={<Navigate to="/tables" replace />} />
+            <Route path="tables" element={<Tables />} />
+            <Route path="menu" element={<Menu />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="waiters" element={<Waiters />} />
+            <Route path="profile" element={<Profile />} />
+          </Route>
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
   );
 }
