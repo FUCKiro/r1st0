@@ -109,35 +109,27 @@ export function useOrders() {
       await updateOrderStatus(orderId, status);
       const updatedOrders = await getOrders();
       setOrders(updatedOrders);
-      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore nell\'aggiornamento dell\'ordine');
-      return false;
     }
   };
 
   const handleUpdateOrderItemStatus = async (itemId: number, status: 'pending' | 'preparing' | 'ready' | 'served' | 'cancelled') => {
     try {
       await updateOrderItemStatus(itemId, status);
-      const updatedOrders = await getOrders();
-      setOrders(updatedOrders);
-      return true;
+      setOrders(await getOrders());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore nell\'aggiornamento dell\'elemento');
-      return false;
     }
   };
 
   const handleDeleteOrder = async (id: number) => {
-    if (!confirm('Sei sicuro di voler eliminare questo ordine?')) return false;
+    if (!confirm('Sei sicuro di voler eliminare questo ordine?')) return;
     try {
       await deleteOrder(id);
-      const updatedOrders = await getOrders();
-      setOrders(updatedOrders);
-      return true;
+      setOrders(await getOrders());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore nell\'eliminazione dell\'ordine');
-      return false;
     }
   };
 

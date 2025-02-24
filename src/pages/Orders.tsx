@@ -43,10 +43,12 @@ export default function Orders() {
 
   const handleCreateOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await createOrder(newOrder);
-    if (success) {
+    try {
+      await createOrder(newOrder);
       setIsModalOpen(false);
       resetOrderForm();
+    } catch (err) {
+      console.error('Error creating order:', err);
     }
   };
 
@@ -54,11 +56,13 @@ export default function Orders() {
     e.preventDefault();
     if (!selectedOrderId) return;
 
-    const success = await addToOrder(selectedOrderId, newOrder.items);
-    if (success) {
+    try {
+      await addToOrder(selectedOrderId, newOrder.items);
       setIsAddToOrderModalOpen(false);
       setSelectedOrderId(null);
       resetOrderForm();
+    } catch (err) {
+      console.error('Error adding to order:', err);
     }
   };
 
@@ -70,10 +74,12 @@ export default function Orders() {
   const handleCloseBill = async () => {
     if (!selectedOrder) return;
 
-    const success = await updateOrderStatus(selectedOrder.id, 'paid');
-    if (success) {
+    try {
+      await updateOrderStatus(selectedOrder.id, 'paid');
       setIsBillModalOpen(false);
       setSelectedOrder(null);
+    } catch (err) {
+      console.error('Error closing bill:', err);
     }
   };
 

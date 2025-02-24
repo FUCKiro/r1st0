@@ -14,7 +14,7 @@ interface OrderFormData {
 const defaultFormData: OrderFormData = {
   table_id: '',
   notes: '',
-  items: [{ menu_item_id: '', quantity: 1, notes: '', weight_kg: 0 }]
+  items: [{ menu_item_id: '', quantity: 1, notes: '', weight_kg: undefined }]
 };
 
 export function useOrderForm(initialData: OrderFormData = defaultFormData) {
@@ -23,7 +23,7 @@ export function useOrderForm(initialData: OrderFormData = defaultFormData) {
   const addItem = () => {
     setFormData(prev => ({
       ...prev,
-      items: [...prev.items, { menu_item_id: '', quantity: 1, notes: '', weight_kg: 0 }]
+      items: [...prev.items, { menu_item_id: '', quantity: 1, notes: '', weight_kg: undefined }]
     }));
   };
 

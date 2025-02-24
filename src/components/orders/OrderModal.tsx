@@ -14,14 +14,23 @@ interface Props {
   formData: {
     table_id: string;
     notes: string;
-    items: {
+    items: Array<{
       menu_item_id: string;
       quantity: number;
       notes: string;
       weight_kg?: number;
-    }[];
+    }>;
   };
-  onUpdateFormData: React.Dispatch<React.SetStateAction<typeof formData>>;
+  onUpdateFormData: (data: {
+    table_id: string;
+    notes: string;
+    items: Array<{
+      menu_item_id: string;
+      quantity: number;
+      notes: string;
+      weight_kg?: number;
+    }>;
+  }) => void;
   onAddItem: () => void;
   onRemoveItem: (index: number) => void;
   onUpdateItem: (index: number, field: string, value: string | number) => void;
