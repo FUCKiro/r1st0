@@ -8,6 +8,7 @@ export interface OrderItem {
   menu_item_id: number;
   quantity: number;
   notes?: string;
+  weight_kg?: number;
   status: 'pending' | 'preparing' | 'ready' | 'served' | 'cancelled';
   created_at: string;
   updated_at: string;

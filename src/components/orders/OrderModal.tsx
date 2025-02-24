@@ -17,6 +17,7 @@ interface Props {
     items: Array<{
       menu_item_id: string;
       quantity: number;
+      weight_kg?: number;
       notes: string;
     }>;
   };
@@ -26,6 +27,7 @@ interface Props {
     items: Array<{
       menu_item_id: string;
       quantity: number;
+      weight_kg?: number;
       notes: string;
     }>;
   }) => void;

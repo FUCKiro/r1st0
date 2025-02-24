@@ -24,7 +24,7 @@ export default function Orders() {
   const [newOrder, setNewOrder] = useState({
     table_id: '',
     notes: '',
-    items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+    items: [{ menu_item_id: '', quantity: 1, weight_kg: undefined, notes: '' }]
   });
 
   const [isBillModalOpen, setIsBillModalOpen] = useState(false);
@@ -87,7 +87,7 @@ export default function Orders() {
       setNewOrder({
         table_id: '',
         notes: '',
-        items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+        items: [{ menu_item_id: '', quantity: 1, weight_kg: undefined, notes: '' }]
       });
       const data = await getOrders();
       setOrders(data);
@@ -116,7 +116,7 @@ export default function Orders() {
       setNewOrder({
         table_id: '',
         notes: '',
-        items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+        items: [{ menu_item_id: '', quantity: 1, weight_kg: undefined, notes: '' }]
       });
       const data = await getOrders();
       setOrders(data);
@@ -178,7 +178,7 @@ export default function Orders() {
   const addOrderItem = () => {
     setNewOrder(prev => ({
       ...prev,
-      items: [...prev.items, { menu_item_id: '', quantity: 1, notes: '' }]
+      items: [...prev.items, { menu_item_id: '', quantity: 1, weight_kg: undefined, notes: '' }]
     }));
   };
 
@@ -249,7 +249,7 @@ export default function Orders() {
             setNewOrder({
               table_id: order.table_id.toString(),
               notes: '',
-              items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+              items: [{ menu_item_id: '', quantity: 1, weight_kg: undefined, notes: '' }]
             });
             setIsAddToOrderModalOpen(true);
           }}
@@ -265,7 +265,7 @@ export default function Orders() {
           setNewOrder({
             table_id: '',
             notes: '',
-            items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+            items: [{ menu_item_id: '', quantity: 1, weight_kg: undefined, notes: '' }]
           });
         }}
         onSubmit={handleCreateOrder}
@@ -291,7 +291,7 @@ export default function Orders() {
           setNewOrder({
             table_id: '',
             notes: '',
-            items: [{ menu_item_id: '', quantity: 1, notes: '' }]
+            items: [{ menu_item_id: '', quantity: 1, weight_kg: undefined, notes: '' }]
           });
         }}
         onSubmit={handleAddToOrder}
